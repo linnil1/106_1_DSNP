@@ -1,5 +1,5 @@
-CFLAGS = -O3 -Wall
-CFLAGS = -g -Wall
+CFLAGS = -O3 -Wall -std=c++11
+CFLAGS = -g -Wall -std=c++11
 
 p2Run: p2Main.o p2Table.o
 	g++ -o $@ p2Main.o p2Table.o $(CFLAGS)
