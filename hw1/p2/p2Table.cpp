@@ -9,8 +9,10 @@
 #include <fstream>
 #include <climits>
 #include <iostream>
+#include <sstream>
 #include <iomanip> 
 #include <set>
+#include <algorithm>
 
 using namespace std;
 
@@ -47,18 +49,23 @@ bool Table::read(const string& csvFile)
           // "1,3," this condition
         if(cols == 1)
             v.push_back(INT_MAX);
+        // add row to table
         rowAdd(v);
     }
 
     return true;
 }
 
-void Table::rowAdd(std::vector<int>& v){
-    _rows.push_back(Row(v));
+void Table::rowAdd(const std::vector<int>& v){
+    if(v.size() != nCols()) // input error
+        cout << "Error columns\n";
+    else
+        _rows.push_back(Row(v));
 }
 
 void Table::PRINT(void){
-    for(unsigned int i=0; i<nRows(); ++i,puts(""))
+    for(unsigned int i=0; i<nRows(); ++i)
+    {
         for(unsigned int j=0; j<nCols(); ++j)
         {
             cout << setw(4) << right;
@@ -67,52 +74,57 @@ void Table::PRINT(void){
             else
                 cout << _rows[i][j];
         }
+        cout << endl;
+    }
 }
 
-vector<int> Table::rowGet(int &c){
-    cin >> c;
+vector<int> Table::rowGet(const int& col){
     vector<int> v;
+    if(col < 0 || (unsigned int)col >= nCols()) // over the range
+        return v;
     for(unsigned int i=0; i<nRows(); ++i)
-        if(_rows[i][c] != INT_MAX)
-            v.push_back(_rows[i][c]);
+        if(_rows[i][col] != INT_MAX)
+            v.push_back(_rows[i][col]);
     return v;
 }
 
-int Table::SUM(vector<int>& v){
+int Table::SUM(const int& col){
+    vector<int> v = rowGet(col);
     int sum = 0;
     for(auto& i: v)
         sum += i;
     return sum;
 }
 
-int Table::MAX(vector<int>& v){
+int Table::MAX(const int& col){
+    vector<int> v = rowGet(col);
     return *max_element(v.begin(), v.end());
 }
 
-int Table::MIN(vector<int>& v){
+int Table::MIN(const int& col){
+    vector<int> v = rowGet(col);
     return *min_element(v.begin(), v.end());
 }
 
-int Table::DIST(vector<int>& v){
+int Table::DIST(const int& col){
+    vector<int> v = rowGet(col);
     set<int> set_v(v.begin(), v.end());
     return set_v.size();
 }
 
-double Table::AVE(vector<int>& v){
-    return double(SUM(v)) / v.size();
+double Table::AVE(const int& col){
+    vector<int> v = rowGet(col);
+    return double(SUM(col)) / v.size();
 }
 
-void Table::ADD(){
-   string s;
-   getline(cin, s);
+void Table::ADD(const string& s){
    stringstream ss(s);
    std::vector<int> v;
-   while(ss >> s)
-       if(s == ".")
+   string sin;
+   while(ss >> sin)
+       if(sin == ".")
            v.push_back(INT_MAX);
        else
-           v.push_back(stoi(s));
-   if(v.size() != nCols())
-       puts("Error columns");
+           v.push_back(stoi(sin));
    rowAdd(v);
 }

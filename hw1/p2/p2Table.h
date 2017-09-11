@@ -10,9 +10,6 @@
 
 #include <vector>
 #include <string>
-#include <iostream>
-#include <sstream>
-#include <algorithm>
 
 using namespace std;
 
@@ -20,7 +17,7 @@ class Row
 {
 public:
     // constructor and member functions on your own
-    Row(vector<int>& v)
+    Row(const vector<int>& v)
     {
         // not work
         // _data = v.data();
@@ -51,15 +48,15 @@ public:
     bool read(const string&);
 
     // cmd function
-    vector<int> rowGet(int&);
-    void PRINT(void);
-    int SUM(vector<int>&);
-    int MAX(vector<int>&);
-    int MIN(vector<int>&);
-    int DIST(vector<int>&);
-    double AVE(vector<int>&);
-    void rowAdd(vector<int>&);
-    void ADD(void);
+    vector<int> rowGet(const int&);
+    void PRINT(void); // this function will print
+    int SUM(const int&);
+    int MAX(const int&);
+    int MIN(const int&);
+    int DIST(const int&);
+    double AVE(const int&);
+    void rowAdd(const vector<int>&);
+    void ADD(const string&);
 
     // Basic access functions
     size_t nCols() const { return _nCols; }

@@ -30,56 +30,35 @@ int main()
 
 // read and execute commands
    while (true) {
-//     if (true){
        string cmd;
        cin >> cmd;
-       int c;
 
        if(cmd == "PRINT") 
            table.PRINT();
-       else if(cmd == "SUM")
+       else if(cmd == "SUM" || cmd == "MAX" || cmd == "MIN" || cmd == "DIST" || cmd == "AVE")
        {
-           vector<int> col = table.rowGet(c);
-           if(!col.size())
+           int col;
+           cin >> col;
+           if(!table.rowGet(col).size())
                cout << "Error: This is a NULL column!!\n";
-           else
-               cout << "The summation of data in column #" << c << " is " << table.SUM(col) << ".\n";
-       }
-       else if(cmd == "MAX")
-       {
-           vector<int> col = table.rowGet(c);
-           if(!col.size())
-               cout << "Error: This is a NULL column!!\n";
-           else
-               cout << "The maximum of data in column #"  << c << " is " << table.MAX(col) << ".\n";
-       }
-       else if(cmd == "MIN")
-       {
-           vector<int> col = table.rowGet(c);
-           if(!col.size())
-               cout << "Error: This is a NULL column!!\n";
-           else
-               cout << "The minimum of data in column #"  << c << " is " << table.MIN(col) << ".\n";
-       }
-       else if(cmd == "DIST")
-       {
-           vector<int> col = table.rowGet(c);
-           if(!col.size())
-               cout << "Error: This is a NULL column!!\n";
-           else
-               cout << "The distinct of data in column #" << c << " is " << table.DIST(col) << ".\n";
-       }
-       else if(cmd == "AVE")
-       {
-           vector<int> col = table.rowGet(c);
-           if(!col.size())
-               cout << "Error: This is a NULL column!!\n";
-           else
-               cout << "The average of data in column #"  << c << " is " <<
+           else if(cmd == "SUM")
+               cout << "The summation of data in column #" << col << " is " << table.SUM(col) << ".\n";
+           else if(cmd == "MAX")
+               cout << "The maximum of data in column #"  << col << " is " << table.MAX(col) << ".\n";
+           else if(cmd == "MIN")
+               cout << "The minimum of data in column #"  << col << " is " << table.MIN(col) << ".\n";
+           else if(cmd == "DIST")
+               cout << "The distinct of data in column #" << col << " is " << table.DIST(col) << ".\n";
+           else if(cmd == "AVE")
+               cout << "The average of data in column #"  << col << " is " <<
                    fixed << setprecision(1) << table.AVE(col) << ".\n";
        }
        else if(cmd == "ADD")
-           table.ADD();
+       {
+           string s;
+           getline(cin, s);
+           table.ADD(s);
+       }
        else if(cmd == "EXIT")
            break;
    }
