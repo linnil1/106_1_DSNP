@@ -48,7 +48,7 @@ int main()
            else if(cmd == "MIN")
                cout << "The minimum of data in column #"  << col << " is " << table.MIN(col) << ".\n";
            else if(cmd == "DIST")
-               cout << "The distinct of data in column #" << col << " is " << table.DIST(col) << ".\n";
+               cout << "The distinct count of data in column #" << col << " is " << table.DIST(col) << ".\n";
            else if(cmd == "AVE")
                cout << "The average of data in column #"  << col << " is " <<
                    fixed << setprecision(1) << table.AVE(col) << ".\n";
