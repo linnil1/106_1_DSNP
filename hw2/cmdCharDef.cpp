@@ -63,9 +63,6 @@ void mybeep()
 inline ParseChar returnCh(int);
 
 #ifndef TA_KB_SETTING
-// YOU NEED TO CUSTOMIZE THIS PART...
-// YOU NEED TO CUSTOMIZE THIS PART...
-//
 // Modify "cmdCharDef.h" to work with the following code
 //
 // Make sure you DO NOT define TA_KB_SETTING in your Makefile
@@ -84,21 +81,36 @@ ParseChar getChar(istream& istr)
     case INPUT_END_KEY:   // Ctrl-d
     case TAB_KEY:         // tab('\t') or Ctrl-i
     case NEWLINE_KEY:     // enter('\n') or ctrl-m
+    case BACK_SPACE_KEY:  // backspace
       return returnCh(ch);
 
-    // TODO... Check and change if necessary!!!!!!
     // -- The following simple/combo keys are platform-dependent
     //    You should test to check the returned codes of these key presses
-    // -- You should either modify the "enum ParseChar" definitions in
-    //    "cmdCharDef.h", or revise the control flow of the "case ESC" below
-    //
-    // -- You need to handle:
-    //    { BACK_SPACE_KEY, ARROW_UP/DOWN/RIGHT/LEFT,
-    //      HOME/END/PG_UP/PG_DOWN/INSERT/DELETE }
-    //
     // Combo keys: multiple codes for one key press
     // -- Usually starts with ESC key, so we check the "case ESC"
-    // case ESC_KEY:
+
+    case ESC_KEY: {
+      char combo = mygetc(istr);
+      // Note: ARROW_KEY_INT == MOD_KEY_INT, so we only check MOD_KEY_INT
+      if (combo == char(MOD_KEY_INT)) {
+        char key = mygetc(istr);
+        // Arrow
+        if ((key >= char(ARROW_KEY_BEGIN)) &&
+            (key <= char(ARROW_KEY_END)))
+            return returnCh(int(key) + ARROW_KEY_FLAG);
+        // Home End
+        else if (key == char(HOME_KEY) || key == char(END_KEY))
+            return returnCh(int(key) + MOD_KEY_FLAG);
+        // INSERT UP DOWN DELETE
+        else if ((key >= char(MOD_KEY_BEGIN)) &&
+            (key <= char(MOD_KEY_END))) {
+            mygetc(istr); // 4 characters
+            return returnCh(int(key) + MOD_KEY_FLAG);
+        }
+        else return returnCh(UNDEFINED_KEY);
+      }
+      else { mybeep(); return getChar(istr); }
+    }
 
     // For the remaining printable and undefined keys
     default:
@@ -152,7 +164,7 @@ ParseChar getChar(istream& istr)
           else return returnCh(UNDEFINED_KEY);
         }
         else if ((key >= char(ARROW_KEY_BEGIN)) &&
-              (key <= char(ARROW_KEY_END)))
+                 (key <= char(ARROW_KEY_END)))
           return returnCh(int(key) + ARROW_KEY_FLAG);
         else return returnCh(UNDEFINED_KEY);
       }
