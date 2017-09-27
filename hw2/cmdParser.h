@@ -76,7 +76,7 @@ private:
   char*     _readBufEndBefore;      // end of last time
   char*     _readBufPtrBefore;      // ptr of last time
   vector<string>   _history;        // oldest:_history[0],latest:_hist.back()
-  int              _historyIdx;     // (1) Position to insert history string
+  long             _historyIdx;     // (1) Position to insert history string
                                     //     i.e. _historyIdx = _history.size()
                                     // (2) When up/down/pgUp/pgDn is pressed,
                                     //     position to history to retrieve

@@ -50,15 +50,17 @@ void CmdParser::readCmdInt(istream& istr)
       case NEWLINE_KEY    : addHistory();
                             cout << char(NEWLINE_KEY);
                             resetBufAndPrintPrompt(); break;
-      case ARROW_UP_KEY   : moveToHistory(_historyIdx - 1); break;
-      case ARROW_DOWN_KEY : moveToHistory(_historyIdx + 1); break;
-      case ARROW_RIGHT_KEY: moveBufPtr(1); break;
+      case ARROW_UP_KEY   : moveToHistory(-1); break;
+      case ARROW_DOWN_KEY : moveToHistory(+1); break;
+      case ARROW_RIGHT_KEY: moveBufPtr(+1); break;
       case ARROW_LEFT_KEY : moveBufPtr(-1); break;
-      case PG_UP_KEY      : moveToHistory(_historyIdx - PG_OFFSET); break;
-      case PG_DOWN_KEY    : moveToHistory(_historyIdx + PG_OFFSET); break;
-      case TAB_KEY        : insertChar(' ', 8 - (_readBufPtr - _readBuf) % 8); break;
+      case PG_UP_KEY      : moveToHistory(-PG_OFFSET); break;
+      case PG_DOWN_KEY    : moveToHistory(+PG_OFFSET); break;
+      case TAB_KEY        : insertChar(' ', TAB_POSITION - 
+                              (_readBufPtr - _readBuf) % TAB_POSITION); break;
       case INSERT_KEY     : // not yet supported; fall through to UNDEFINE
-      case UNDEFINED_KEY:   mybeep(); break; default:  // printable character
+      case UNDEFINED_KEY  : mybeep(); break;
+      default:  // printable character
         insertChar(char(pch)); break;
     }
     printCurrent();
@@ -158,13 +160,15 @@ bool CmdParser::moveBufPtr(int step)
 //
 bool CmdParser::deleteChar()
 {
-  if (_readBufEnd == _readBufPtr)
+  if (_readBufEnd == _readBufPtr) {
+    mybeep();
     return false;
+  }
 
   // move forward
   for(char *c = _readBufPtr + 1; c < _readBufEnd; ++c)
     *(c - 1) = *c;
-  --_readBufEnd;
+  *(--_readBufEnd) = 0;
   return true;
 }
 
@@ -183,7 +187,7 @@ bool CmdParser::deleteChar()
 // cmd> This is kkkthe command
 //                 ^
 //
-void CmdParser::insertChar(char ch, int repeat)
+void CmdParser::insertChar(char ch, int repeat /*=1*/)
 {
   assert(repeat >= 1);
   // move back
@@ -213,7 +217,8 @@ void CmdParser::insertChar(char ch, int repeat)
 //
 void CmdParser::deleteLine()
 {
-  // TODO...
+  _readBufPtr = _readBufEnd = _readBuf;
+  *_readBufPtr = 0;
 }
 
 
@@ -235,9 +240,32 @@ void CmdParser::deleteLine()
 //
 // [Note] index should not = _historyIdx
 //
-void CmdParser::moveToHistory(int index)
+//void CmdParser::moveToHistory(int index)
+void CmdParser::moveToHistory(int step)
 {
-  // TODO...
+  // store command in history
+  if (!_tempCmdStored) {
+    _history.push_back(string(_readBuf, _readBufEnd));
+    _tempCmdStored = true;
+  }
+  else if (_historyIdx == (long)_history.size() - 1)
+    _history.back() = string(_readBuf, _readBufEnd);
+
+  // beep
+  if ((step < 0 && _historyIdx == 0) ||
+      (step > 0 && _historyIdx == (long)_history.size() - 1)) {
+    mybeep();
+    return;
+  }
+
+  // go step
+  _historyIdx += step;
+  if(_historyIdx < 0)
+    _historyIdx = 0;
+  else if(_historyIdx >= (long)_history.size())
+    _historyIdx = _history.size() - 1;
+  
+  retrieveHistory();
 }
 
 
@@ -255,7 +283,20 @@ void CmdParser::moveToHistory(int index)
 //
 void CmdParser::addHistory()
 {
-  // TODO...
+  // strip
+  char *a, *b;
+  for (a = _readBuf; *a == ' ' && a < _readBufEnd; ++a);
+  if (a== _readBufEnd)
+    return ; // all white space
+  for (b = _readBufEnd; *(b-1) == ' '; --b);
+
+  // push
+  if (_tempCmdStored)
+    _history.back() = string(a, b);
+  else
+    _history.push_back(string(a, b));
+  _tempCmdStored = false;
+  _historyIdx = _history.size();
 }
 
 
@@ -268,6 +309,6 @@ void CmdParser::retrieveHistory()
 {
   deleteLine();
   strcpy(_readBuf, _history[_historyIdx].c_str());
-  cout << _readBuf;
+  // cout << _readBuf;
   _readBufPtr = _readBufEnd = _readBuf + _history[_historyIdx].size();
 }

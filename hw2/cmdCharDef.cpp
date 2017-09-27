@@ -57,7 +57,7 @@ char mygetc(istream& istr)
 
 void mybeep()
 {
-  cout << char(BEEP_CHAR);
+  cout << char(BEEP_CHAR) << flush;
 }
 
 inline ParseChar returnCh(int);
