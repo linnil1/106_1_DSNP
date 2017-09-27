@@ -47,14 +47,10 @@ private:
     _readBufPtr = _readBufEnd = _readBuf;
     *_readBufPtr = 0;
     printPrompt();
-    setCurrent();
   }
   void readCmdInt(istream&);
   void printPrompt() const { cout << "cmd> "; }
-  void printCurrent();
-  void setCurrent();
   bool moveBufPtr(char* const);
-  bool moveBufPtr(int);
   bool deleteChar();
   void insertChar(char, int = 1);
   void deleteLine();
@@ -73,10 +69,8 @@ private:
                                     // also be the insert and delete point
   char*     _readBufEnd;            // end of string position of _readBuf
                                     // make sure *_readBufEnd = 0
-  char*     _readBufEndBefore;      // end of last time
-  char*     _readBufPtrBefore;      // ptr of last time
   vector<string>   _history;        // oldest:_history[0],latest:_hist.back()
-  long             _historyIdx;     // (1) Position to insert history string
+  int              _historyIdx;     // (1) Position to insert history string
                                     //     i.e. _historyIdx = _history.size()
                                     // (2) When up/down/pgUp/pgDn is pressed,
                                     //     position to history to retrieve
