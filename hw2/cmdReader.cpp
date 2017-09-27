@@ -44,27 +44,57 @@ void CmdParser::readCmdInt(istream& istr)
       case HOME_KEY       : moveBufPtr(_readBuf); break;
       case LINE_END_KEY   :
       case END_KEY        : moveBufPtr(_readBufEnd); break;
-      case BACK_SPACE_KEY : /* TODO */ break;
+      case BACK_SPACE_KEY : moveBufPtr(-1);
+                            deleteChar(); break;
       case DELETE_KEY     : deleteChar(); break;
       case NEWLINE_KEY    : addHistory();
-                    cout << char(NEWLINE_KEY);
-                    resetBufAndPrintPrompt(); break;
+                            cout << char(NEWLINE_KEY);
+                            resetBufAndPrintPrompt(); break;
       case ARROW_UP_KEY   : moveToHistory(_historyIdx - 1); break;
       case ARROW_DOWN_KEY : moveToHistory(_historyIdx + 1); break;
-      case ARROW_RIGHT_KEY: /* TODO */ break;
-      case ARROW_LEFT_KEY : /* TODO */ break;
+      case ARROW_RIGHT_KEY: moveBufPtr(1); break;
+      case ARROW_LEFT_KEY : moveBufPtr(-1); break;
       case PG_UP_KEY      : moveToHistory(_historyIdx - PG_OFFSET); break;
       case PG_DOWN_KEY    : moveToHistory(_historyIdx + PG_OFFSET); break;
-      case TAB_KEY        : /* TODO */ break;
+      case TAB_KEY        : insertChar(' ', 8 - (_readBufPtr - _readBuf) % 8); break;
       case INSERT_KEY     : // not yet supported; fall through to UNDEFINE
-      case UNDEFINED_KEY:   mybeep(); break;
-      default:  // printable character
+      case UNDEFINED_KEY:   mybeep(); break; default:  // printable character
         insertChar(char(pch)); break;
     }
+    printCurrent();
+    setCurrent();
     #ifdef TA_KB_SETTING
     taTestOnly();
     #endif
   }
+}
+
+//
+// output function
+//
+
+void CmdParser::printCurrent()
+{
+  // go to first characters
+  for (char *c = _readBufPtrBefore; c > _readBuf; --c)
+    cout << char(BACK_SPACE_CHAR);
+  // output
+  char *c;
+  for (c = _readBuf; c < _readBufEnd; ++c)
+    cout << *c;
+  // remove tail
+  for (; c < _readBufEndBefore; ++c)
+    cout << ' ';
+  // go to ptr
+  for (; c > _readBufPtr; --c)
+    cout << char(BACK_SPACE_CHAR);
+}
+
+
+void CmdParser::setCurrent()
+{
+  _readBufPtrBefore = _readBufPtr;
+  _readBufEndBefore = _readBufEnd;
 }
 
 
@@ -82,7 +112,27 @@ void CmdParser::readCmdInt(istream& istr)
 //        to move the _readBufPtr to proper position.
 bool CmdParser::moveBufPtr(char* const ptr)
 {
-  // TODO...
+  _readBufPtr = ptr;
+  return true;
+}
+
+// step can be -1, 0, 1
+bool CmdParser::moveBufPtr(int step)
+{
+  if( _readBufPtr == _readBuf && step < 0) {
+    mybeep();
+    return false;
+  }
+  if( _readBufPtr == _readBufEnd && step > 0) {
+    mybeep();
+    return false;
+  }
+  if( _readBufPtr + step > _readBufEnd)
+    _readBufPtr = _readBufEnd;
+  else if( _readBufPtr + step < _readBuf)
+    _readBufPtr = _readBuf;
+  else
+    _readBufPtr += step;
   return true;
 }
 
@@ -108,7 +158,13 @@ bool CmdParser::moveBufPtr(char* const ptr)
 //
 bool CmdParser::deleteChar()
 {
-  // TODO...
+  if (_readBufEnd == _readBufPtr)
+    return false;
+
+  // move forward
+  for(char *c = _readBufPtr + 1; c < _readBufEnd; ++c)
+    *(c - 1) = *c;
+  --_readBufEnd;
   return true;
 }
 
@@ -129,8 +185,16 @@ bool CmdParser::deleteChar()
 //
 void CmdParser::insertChar(char ch, int repeat)
 {
-  // TODO...
   assert(repeat >= 1);
+  // move back
+  for (char *c = _readBufEnd - 1; c >= _readBufPtr; --c)
+    *(c + repeat) = *c;
+  _readBufEnd += repeat;
+  *_readBufEnd = 0;
+
+  // insert in
+  for (int i=0; i<repeat; ++i)
+    *(_readBufPtr++) = ch;
 }
 
 // 1. Delete the line that is currently shown on the screen

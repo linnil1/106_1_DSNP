@@ -97,15 +97,15 @@ ParseChar getChar(istream& istr)
         // Arrow
         if ((key >= char(ARROW_KEY_BEGIN)) &&
             (key <= char(ARROW_KEY_END)))
-            return returnCh(int(key) + ARROW_KEY_FLAG);
+          return returnCh(int(key) + ARROW_KEY_FLAG);
         // Home End
         else if (key == char(HOME_KEY) || key == char(END_KEY))
-            return returnCh(int(key) + MOD_KEY_FLAG);
+          return returnCh(int(key) + MOD_KEY_FLAG);
         // INSERT UP DOWN DELETE
         else if ((key >= char(MOD_KEY_BEGIN)) &&
-            (key <= char(MOD_KEY_END))) {
-            mygetc(istr); // 4 characters
-            return returnCh(int(key) + MOD_KEY_FLAG);
+                 (key <= char(MOD_KEY_END))) {
+          mygetc(istr); // 4 characters
+          return returnCh(int(key) + MOD_KEY_FLAG);
         }
         else return returnCh(UNDEFINED_KEY);
       }

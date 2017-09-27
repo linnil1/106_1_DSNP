@@ -44,9 +44,6 @@
 
 
 #ifndef TA_KB_SETTING
-// [TODO]
-// YOU NEED TO CUSTOMIZE THIS PART...
-// YOU NEED TO CUSTOMIZE THIS PART...
 //
 // Run "testAsc" to define your setting here...
 //
@@ -80,6 +77,7 @@ enum ParseChar
   
   //
   // -- Arrow keys: 27 -> 91 -> {UP=65, DOWN=66, RIGHT=67, LEFT=68}
+  //
   ARROW_KEY_FLAG   = 1 << 8,
   ARROW_KEY_INT    = 91,
   ARROW_UP_KEY     = 65 + ARROW_KEY_FLAG,
