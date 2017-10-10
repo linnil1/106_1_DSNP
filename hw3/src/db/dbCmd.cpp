@@ -91,7 +91,7 @@ CmdExecStatus DBAveCmd::exec(const string& option)
   if (!CmdExec::lexSingleOption(option, token, false))
     return CMD_EXEC_ERROR;
   int c;
-  if (!checkColIdx(option, c)) return CMD_EXEC_ERROR;
+  if (!checkColIdx(token, c)) return CMD_EXEC_ERROR;
 
   float a = dbtbl.getAve(c);
   ios_base::fmtflags origFlags = cout.flags();
@@ -124,7 +124,7 @@ CmdExecStatus DBCountCmd::exec(const string& option)
   if (!CmdExec::lexSingleOption(option, token, false))
     return CMD_EXEC_ERROR;
   int c;
-  if (!checkColIdx(option, c)) return CMD_EXEC_ERROR;
+  if (!checkColIdx(token, c)) return CMD_EXEC_ERROR;
 
   int n = dbtbl.getCount(c);
   cout << "The distinct count of column " << c << " is " << n << "." << endl;
@@ -194,7 +194,7 @@ CmdExecStatus DBMaxCmd::exec(const string& option)
   if (!CmdExec::lexSingleOption(option, token, false))
     return CMD_EXEC_ERROR;
   int c;
-  if (!checkColIdx(option, c)) return CMD_EXEC_ERROR;
+  if (!checkColIdx(token, c)) return CMD_EXEC_ERROR;
 
   float n = dbtbl.getMax(c);
   cout << "The max data of column " << c << " is " << n << "." << endl;
@@ -224,7 +224,7 @@ CmdExecStatus DBMinCmd::exec(const string& option)
   if (!CmdExec::lexSingleOption(option, token, false))
     return CMD_EXEC_ERROR;
   int c;
-  if (!checkColIdx(option, c)) return CMD_EXEC_ERROR;
+  if (!checkColIdx(token, c)) return CMD_EXEC_ERROR;
 
   float n = dbtbl.getMin(c);
   cout << "The min data of column " << c << " is " << n << "." << endl;
@@ -258,7 +258,8 @@ CmdExecStatus DBPrintCmd::exec(const string& option)
 void DBPrintCmd::usage(ostream& os) const
 {
   os << "DBPrint < (int rowIdx) (int colIdx)\n"
-    << "        | -Row (int rowIdx) | -Column (colIdx) | -Table>" << endl;
+    << "        | -Row (int rowIdx) | -Column (colIdx) | -Table | -Summary>"
+    << endl;
 }
 
 void DBPrintCmd::help() const
@@ -374,7 +375,7 @@ CmdExecStatus DBSumCmd::exec(const string& option)
   if (!CmdExec::lexSingleOption(option, token, false))
     return CMD_EXEC_ERROR;
   int c;
-  if (!checkColIdx(option, c)) return CMD_EXEC_ERROR;
+  if (!checkColIdx(token, c)) return CMD_EXEC_ERROR;
 
   float n = dbtbl.getSum(c);
   cout << "The sum of column " << c << " is " << n << "." << endl;

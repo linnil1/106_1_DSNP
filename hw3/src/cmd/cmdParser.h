@@ -85,15 +85,15 @@ private:
   string            _optCmd;
 };
 
-#define CmdClass(T)                           \
-class T: public CmdExec                       \
-{                                             \
-public:                                       \
-  T() {}                                      \
-  ~T() {}                                     \
-  CmdExecStatus exec(const string& option);   \
-  void usage(ostream& os) const;              \
-  void help() const;                          \
+#define CmdClass(T)                          \
+class T: public CmdExec                      \
+{                                            \
+public:                                      \
+  T() {}                                     \
+  ~T() {}                                    \
+  CmdExecStatus exec(const string& option);  \
+  void usage(ostream& os) const;             \
+  void help() const;                         \
 }
 
 
@@ -146,7 +146,7 @@ private:
   void insertChar(char, int = 1);
   void deleteLine();
   void reprintCmd();
-  void moveToHistory(size_t index);
+  void moveToHistory(int index);
   bool addHistory();
   void retrieveHistory();
   #ifdef TA_KB_SETTING
@@ -163,7 +163,7 @@ private:
   char*     _readBufEnd;            // end of string position of _readBuf
                                     // make sure *_readBufEnd = 0
   vector<string>   _history;        // oldest:_history[0],latest:_hist.back()
-  size_t    _historyIdx;            // (1) Position to insert history string
+  int       _historyIdx;            // (1) Position to insert history string
                                     //     i.e. _historyIdx = _history.size()
                                     // (2) When up/down/pgUp/pgDn is pressed,
                                     //     position to history to retrieve
