@@ -9,6 +9,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
+#include <cctype>
 #include "util.h"
 #include "cmdParser.h"
 
@@ -92,7 +93,8 @@ CmdExecStatus CmdParser::execOneCmd()
 // Print an endl at the end.
 void CmdParser::printHelps() const
 {
-  // TODO...
+  for(auto& cm: _cmdMap)
+    cm.second->help();
 }
 
 void CmdParser::printHistory(int nPrint) const
@@ -131,9 +133,23 @@ CmdExec* CmdParser::parseCmd(string& option)
   assert(!_history.empty());
   string str = _history.back();
 
-  // TODO...
   assert(str[0] != 0 && str[0] != ' ');
-  return NULL;
+  size_t space_pos = str.find_first_of(' ');
+  if (space_pos == string::npos)
+    space_pos = str.length();
+
+  string head = str.substr(0, space_pos),
+         tail = str.substr(space_pos);
+  CmdExec *ce = getCmd(head);
+
+  if (!ce) {
+    cerr << "Illegal command!! (" << head << ")\n";
+    return NULL;
+  }
+  else {
+    option = tail;
+    return ce;
+  }
 }
 
 // This function is called by pressing 'Tab'.
@@ -278,8 +294,12 @@ void CmdParser::listCmd(const string& str)
 //
 CmdExec* CmdParser::getCmd(string cmd)
 {
-  CmdExec* e = 0;
-  // TODO...
+  CmdExec* e = NULL;
+  for (CmdRegPair &cm: _cmdMap) {
+    string all = cm.first + cm.second->getOptCmd();
+    if (myStrNCmp(all, cmd, cm.first.length()) == 0)
+      return cm.second;
+  }
   return e;
 }
 

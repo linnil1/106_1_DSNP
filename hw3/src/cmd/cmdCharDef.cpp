@@ -69,8 +69,7 @@ inline static ParseChar returnCh(int);
 //
 // Make sure you DO NOT define TA_KB_SETTING in your Makefile
 //
-ParseChar
-CmdParser::getChar(istream& istr) const
+ParseChar CmdParser::getChar(istream& istr) const
 {
   char ch = mygetc(istr);
 
@@ -117,8 +116,7 @@ CmdParser::getChar(istream& istr) const
 //
 // TA will use "make -DTA_KB_SETTING" to test your program
 //
-ParseChar
-CmdParser::getChar(istream& istr) const
+ParseChar CmdParser::getChar(istream& istr) const
 {
   char ch = mygetc(istr);
 
@@ -170,8 +168,7 @@ CmdParser::getChar(istream& istr) const
 }
 #endif // TA_KB_SETTING
 
-inline static ParseChar
-returnCh(int ch)
+inline static ParseChar returnCh(int ch)
 {
 #ifndef MAKE_REF
   return ParseChar(ch);
