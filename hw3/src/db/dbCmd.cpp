@@ -54,7 +54,19 @@ static bool checkRowIdx(const string& token, int& c)
 
 bool initDbCmd()
 {
-  // TODO...
+  if (!(cmdMgr->regCmd("DBAPpend", 4,new DBAppendCmd) &&
+        cmdMgr->regCmd("DBAVe"   , 4,new DBAveCmd   ) &&
+        cmdMgr->regCmd("DBCount" , 3,new DBCountCmd ) &&
+        cmdMgr->regCmd("DBDel"   , 3,new DBDelCmd   ) &&
+        cmdMgr->regCmd("DBMAx"   , 4,new DBMaxCmd   ) &&
+        cmdMgr->regCmd("DBMIn"   , 4,new DBMinCmd   ) &&
+        cmdMgr->regCmd("DBPrint" , 3,new DBPrintCmd ) &&
+        cmdMgr->regCmd("DBRead"  , 3,new DBReadCmd  ) &&
+        cmdMgr->regCmd("DBSOrt"  , 4,new DBSortCmd  ) &&
+        cmdMgr->regCmd("DBSUm"   , 4,new DBSumCmd   ) )) {
+    cerr << "Registering \"init\" commands fails... exiting" << endl;
+    return false;
+  }
   return true;
 }
 
@@ -250,8 +262,80 @@ void DBMinCmd::help() const
 //----------------------------------------------------------------------
 CmdExecStatus DBPrintCmd::exec(const string& option)
 {  
-  // TODO...
+  if (!dbtbl)
+    cerr << "Error: Table is not yet created!!\n";
+  vector<string> options;
+  if (!CmdExec::lexOptions(option, options))
+    return CMD_EXEC_ERROR;
 
+  if (options.size() == 0) {
+    errorOption(CMD_OPT_MISSING, "");
+    return CMD_EXEC_ERROR;
+  }
+
+  int doRCO = -1, one;
+  if (myStrNCmp("-Table", options[0], 2) == 0) {
+    if (options.size() > 1) {
+      errorOption(CMD_OPT_EXTRA, options[1]);
+      return CMD_EXEC_ERROR;
+    }
+    cout << dbtbl;
+  }
+  else if (myStrNCmp("-Summary", options[0], 2) == 0) {
+    if (options.size() > 1) {
+      errorOption(CMD_OPT_EXTRA, options[1]);
+      return CMD_EXEC_ERROR;
+    }
+    dbtbl.printSummary();
+  }
+  else if (myStrNCmp("-Row", options[0], 2) == 0)
+    doRCO = 0;
+  else if (myStrNCmp("-Column", options[0], 2) == 0)
+    doRCO = 1;
+  else if (myStr2Int(options[0], one))
+    doRCO = 2;
+  else {
+    CmdExec::errorOption(CMD_OPT_ILLEGAL, options[0]);
+    return CMD_EXEC_ERROR;
+  }
+
+  if (doRCO != -1) {
+    // error handle
+    if (options.size() == 1) {
+      errorOption(CMD_OPT_MISSING, options[0]);
+      return CMD_EXEC_ERROR;
+    }
+    else if (options.size() > 2) {
+      errorOption(CMD_OPT_EXTRA, options[2]);
+      return CMD_EXEC_ERROR;
+    }
+    int num;
+    if (!myStr2Int(options[1], num)) {
+      cerr << "Error: " << options[1] << " is not a number!!\n";
+      return CMD_EXEC_ERROR;
+    }
+
+    // out of range
+    if (doRCO == 0)
+      one = num;
+    if ((doRCO == 0 || doRCO == 2) && (one < 0 || one >= dbtbl.nRows())) {
+      cerr << "Error: Row index " << one << " is out of range!!\n";
+      return CMD_EXEC_ERROR;
+    }
+    else if ((doRCO == 1 || doRCO == 2) && (num < 0 || num >= dbtbl.nCols())) {
+      cerr << "Error: Column index " << num << " is out of range!!\n";
+      return CMD_EXEC_ERROR;
+    }
+    // row
+    if (doRCO == 0)
+      cout << dbtbl[num] << endl;
+    // column
+    else if (doRCO == 1)
+      dbtbl.printCol(num);
+    // one cell
+    else // (doRCO == 2)
+      dbtbl.printData(cout, dbtbl[one][num], true);
+  }
   return CMD_EXEC_DONE;
 }
 

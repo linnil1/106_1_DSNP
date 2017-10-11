@@ -28,17 +28,17 @@ void mybeep();
 // Please refer to the comments in "DofileCmd::exec", cmdCommon.cpp
 bool CmdParser::openDofile(const string& dof)
 {
-  // TODO...
   _dofile = new ifstream(dof.c_str());
-  return true;
+  return _dofile->is_open();
 }
 
 // Must make sure _dofile != 0
 void CmdParser::closeDofile()
 {
   assert(_dofile != 0);
-  // TODO...
+  _dofile->close();
   delete _dofile;
+  _dofile = NULL;
 }
 
 // Return false if registration fails

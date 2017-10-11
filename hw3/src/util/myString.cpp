@@ -44,7 +44,7 @@ int myStrNCmp(const string& s1, const string& s2, unsigned n)
 // (i.e. "del" or string::npos) if found.
 //
 size_t myStrGetTok(const string& str, string& tok, size_t pos = 0,
-        const char del = ' ')
+                   const char del = ' ')
 {
   size_t begin = str.find_first_not_of(del, pos);
   if (begin == string::npos) { tok = ""; return begin; }

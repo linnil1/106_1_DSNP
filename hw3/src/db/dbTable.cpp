@@ -12,6 +12,7 @@
 #include <cassert>
 #include <set>
 #include <algorithm>
+#include <sstream>
 #include "dbTable.h"
 #include "util.h"
 
@@ -25,22 +26,65 @@ ostream& operator << (ostream& os, const DBRow& r)
   // TODO: to print out a row.
   // - Data are seperated by a space. No trailing space at the end.
   // - Null cells are printed as '.'
+  if (r.size())
+    os << r[0];
+  for (size_t i=1; i<r.size(); ++i)
+    if (r[i] != INT_MAX)
+      os << ' ' << r[i];
+    else
+      os << " .";
+
   return os;
 }
 
 ostream& operator << (ostream& os, const DBTable& t)
 {
-  // TODO: to print out a table
+  // to print out a table
   // - Data are seperated by setw(6) and aligned right.
   // - Null cells are printed as '.'
+  // ending newline
+  for (size_t i=0; i<t.nRows(); ++i) {
+    for (size_t j=0; j<t.nCols(); ++j)
+      if (t[i][j] != INT_MAX)
+        os << right << setw(6) << t[i][j];
+      else
+        os << right << setw(6) << '.';
+    os << endl;
+  }
   return os;
 }
 
 ifstream& operator >> (ifstream& ifs, DBTable& t)
 {
-  // TODO: to read in data from csv file and store them in a table
+  // to read in data from csv file and store them in a table
   // - You can assume the input file is with correct csv file format
   // - NO NEED to handle error file format
+  // copy from hw1/p2Table.cpp
+  // read csv
+  // read each line
+  string s, brs;
+  while (ifs >> s) {
+    unsigned int cols = count(s.begin(), s.end(), ',') + 1;
+    // error handle should write here
+    // ...
+
+    // to row
+    stringstream ss(s);
+    std::vector<int> v;
+    while (getline(ss, brs, ',')) {
+      if (brs.length() == 0)
+        v.push_back(INT_MAX);
+      else
+        v.push_back(stoi(brs));
+      --cols;
+    }
+      // "1,3," this condition
+    if (cols == 1)
+      v.push_back(INT_MAX);
+
+    // add row to table
+    t.addRow(DBRow(v));
+  }
   return ifs;
 }
 
@@ -67,7 +111,7 @@ bool DBSort::operator() (const DBRow& r1, const DBRow& r2) const
 /*****************************************/
 void DBTable::reset()
 {
-  // TODO
+  _table = vector<DBRow>();
 }
 
 void DBTable::addCol(const vector<int>& d)
@@ -132,6 +176,10 @@ void DBTable::printCol(size_t c) const
   // TODO: to print out a column.
   // - Data are seperated by a space. No trailing space at the end.
   // - Null cells are printed as '.'
+  vector<int> v;
+  for (size_t i=0; i<nRows(); ++i)
+    v.push_back(_table[i][c]);
+  cout << v << endl;
 }
 
 void DBTable::printSummary() const
@@ -140,7 +188,7 @@ void DBTable::printSummary() const
   for (size_t i = 0; i < nr; ++i)
     for (size_t j = 0; j < nc; ++j)
       if (_table[i][j] != INT_MAX) ++nv;
-  cout << "(#rows, #cols, #data) = (" << nr << ", " << nc << ", "
-    << nv << ")" << endl;
+        cout << "(#rows, #cols, #data) = (" << nr << ", " << nc << ", "
+             << nv << ")" << endl;
 }
 

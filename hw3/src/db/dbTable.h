@@ -58,7 +58,7 @@ public:
   operator void* () const { return _table.empty()? NULL: (void*)this; }
   //number of rows/columns
   size_t nRows() const { return _table.size(); }
-  size_t nCols() const { /* TODO */ return 0; }
+  size_t nCols() const { return _table[0].size();/* TODO */ return 0; }
   // "getXXX" functions
   int getData(size_t r, size_t c) const { return _table[r][c]; }
   float getMax(size_t c) const;
