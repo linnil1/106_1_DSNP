@@ -26,8 +26,14 @@ void mybeep();
 //----------------------------------------------------------------------
 // return false if file cannot be opened
 // Please refer to the comments in "DofileCmd::exec", cmdCommon.cpp
+
+#define DOFILE_STACK_LIMIT 4
 bool CmdParser::openDofile(const string& dof)
 {
+  cout << _dofileStack.size() << endl;
+  if (_dofileStack.size() == DOFILE_STACK_LIMIT) // prevent infinity recursive
+    return false;
+  _dofileStack.push(_dofile);
   _dofile = new ifstream(dof.c_str());
   return _dofile->is_open();
 }
@@ -38,7 +44,12 @@ void CmdParser::closeDofile()
   assert(_dofile != 0);
   _dofile->close();
   delete _dofile;
-  _dofile = NULL;
+  if (_dofileStack.size()) {
+    _dofile = _dofileStack.top();
+    _dofileStack.pop();
+  }
+  else
+    _dofile = NULL;
 }
 
 // Return false if registration fails

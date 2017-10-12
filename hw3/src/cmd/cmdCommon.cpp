@@ -14,11 +14,10 @@ using namespace std;
 
 bool initCommonCmd()
 {
-  if (!(cmdMgr->regCmd("Quit", 1, new QuitCmd) &&
-      cmdMgr->regCmd("HIStory", 3, new HistoryCmd) &&
-      cmdMgr->regCmd("HELp", 3, new HelpCmd) &&
-      cmdMgr->regCmd("DOfile", 2, new DofileCmd)
-    )) {
+  if (!(cmdMgr->regCmd("Quit"   , 1, new QuitCmd   ) &&
+        cmdMgr->regCmd("HIStory", 3, new HistoryCmd) &&
+        cmdMgr->regCmd("HELp"   , 3, new HelpCmd   ) &&
+        cmdMgr->regCmd("DOfile" , 2, new DofileCmd ) )) {
     cerr << "Registering \"init\" commands fails... exiting" << endl;
     return false;
   }

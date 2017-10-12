@@ -113,7 +113,7 @@ CmdExecStatus DBAppendCmd::exec(const string& option)
   // push in
   v.resize(doRow ? dbtbl.nCols() : dbtbl.nRows(), INT_MAX);
   if (doRow)
-    dbtbl.addRow(v);
+    dbtbl.addRow(DBRow(v));
   else
     dbtbl.addCol(v);
 
