@@ -434,7 +434,7 @@ CmdExecStatus DBReadCmd::exec(const string& option)
     cout << "Table is replaced..." << endl;
     dbtbl.reset();
   }
-  if (!(ifs >> dbtbl)) return CMD_EXEC_ERROR;
+  ifs >> dbtbl; // not check if file is error
   cout << "\"" << fileName << "\" was read in successfully." << endl;
 
   return CMD_EXEC_DONE;

@@ -287,9 +287,129 @@ CmdExec* CmdParser::parseCmd(string& option)
 //    [After Tab]
 //    ==> Beep and stay in the same location
 
+string samePrefixGet(const vector<string> &v,const string &target)
+{
+  string same;
+  if (v.size())
+    same = v[0];
+
+  for (auto &s: v)
+    for (size_t i=0; i<same.length(); ++i)
+      if (same[i] != s[i]) {
+        same.resize(i); // get same prefix
+        break;
+      }
+  if (same.empty())
+    return same;
+  return string(same.begin() + target.length(), same.end()); // same part after target
+}
+
+void prettyPrint(const vector<string>& v, int sw) {
+  int num=-1;
+  for (auto &i: v) {
+    if (++num%5==0)
+      cout << endl;
+    cout << setw(sw) << left << i;
+  }
+}
+
 void CmdParser::listCmd(const string& str)
 {
-  // TODO...
+  // remove heading space
+  string cmd = string(_readBuf, _readBufPtr);
+  cmd = cmd.substr(cmd.find_first_of(' '));
+
+  // get possible cmd
+  vector<string> cmd_possible;
+  for (CmdRegPair &cm: _cmdMap) {
+    string all = cm.first + cm.second->getOptCmd();
+    if (cmd.empty() || (cmd.length() <= all.length() &&
+        myStrNCmp(all, cmd, cmd.length()) == 0))
+      cmd_possible.push_back(all);
+  }
+
+  // 1. show all command
+  // 2. show possible cmd
+    // same_part not exist in these commands
+  if (cmd_possible.size() > 1) {
+    prettyPrint(cmd_possible, 12);
+    reprintCmd();
+    _tabPressCount = 0;
+    return ;
+  }
+
+  // 3. auto complete cmd
+  else if (cmd_possible.size() == 1) {
+    string same_part = samePrefixGet(cmd_possible, cmd) + ' ';
+    for (char &c: same_part)
+      insertChar(c);
+    _tabPressCount = 0;
+    return ;
+  }
+
+  CmdExec* e = getCmd(cmd.substr(0, cmd.find_first_of(' ')));
+  // 4. command no match
+  // 7. command no match
+  if (!e) {
+    mybeep();
+    _tabPressCount = 0;
+    return ;
+  }
+
+  // 5. show usage
+  if (_tabPressCount == 1) {
+    cout << endl;
+    e->usage(cout);
+    // cout << _tabPressCount << endl;
+    reprintCmd();
+    return ;
+  }
+
+  // 6. list file
+//  assert(_tabPressCount > 1);
+  string filename = cmd.substr(cmd.find_last_of(' ') + 1), filedir;
+  // support folder browering
+  size_t dirpos = filename.find_last_of('/');
+  if (dirpos != string::npos) {
+    filedir = filename.substr(0, dirpos);
+    filename = filename.substr(dirpos+1);
+  }
+  else
+    filedir = ".";
+  vector<string> file_possible;
+  listDir(file_possible, filename, filedir); // need to check return code
+
+  // 6.5 no match
+  if (file_possible.empty()) {
+    mybeep();
+    return ;
+  }
+  // 6.1 no name
+  if (filename.empty()) {
+    prettyPrint(file_possible, 16);
+    reprintCmd();
+    return ;
+  }
+
+  string same_part = samePrefixGet(file_possible, filename);
+  // 6.2 list file with prefix
+  if (same_part.empty()) {
+    prettyPrint(file_possible, 16);
+    reprintCmd();
+    return ;
+  }
+  else {
+  // 6.4 match one file
+    if (file_possible.size() == 1)
+      same_part += ' ';
+  // 6.3 write prefix without list
+    else
+      mybeep();
+    for (char &c: same_part)
+      insertChar(c);
+    return ;
+  }
+//  cerr << "BUG\n";
 }
 
 // cmd is a copy of the original input
