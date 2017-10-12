@@ -23,7 +23,7 @@ using namespace std;
 /*****************************************/
 ostream& operator << (ostream& os, const DBRow& r)
 {
-  // TODO: to print out a row.
+  // to print out a row.
   // - Data are seperated by a space. No trailing space at the end.
   // - Null cells are printed as '.'
   if (r.size())
@@ -93,7 +93,7 @@ ifstream& operator >> (ifstream& ifs, DBTable& t)
 /*****************************************/
 void DBRow::removeCell(size_t c)
 {
-  // TODO
+  _data.erase(_data.begin() + c);
 }
 
 /*****************************************/
@@ -101,9 +101,12 @@ void DBRow::removeCell(size_t c)
 /*****************************************/
 bool DBSort::operator() (const DBRow& r1, const DBRow& r2) const
 {
-  // TODO: called as a functional object that compares the data in r1 and r2
-  //       based on the order defined in _sortOrder
-  return false;
+  // called as a functional object that compares the data in r1 and r2
+  // based on the order defined in _sortOrder
+  for (const size_t &i: _sortOrder)
+    if (r1[i] != r2[i])
+      return r1[i] < r2[i];
+  return 0; // equal
 }
 
 /*****************************************/
@@ -116,12 +119,15 @@ void DBTable::reset()
 
 void DBTable::addCol(const vector<int>& d)
 {
-  // TODO: add a column to the right of the table. Data are in 'd'.
+  // add a column to the right of the table. Data are in 'd'.
+  for (size_t i=0; i<d.size(); ++i)
+    _table[i].addData(d[i]);
 }
 
 void DBTable::delRow(int c)
 {
-  // TODO: delete row #c. Note #0 is the first row.
+  // delete row #c. Note #0 is the first row.
+  _table.erase(_table.begin() + c);
 }
 
 void DBTable::delCol(int c)
@@ -129,6 +135,8 @@ void DBTable::delCol(int c)
   // delete col #c. Note #0 is the first row.
   for (size_t i = 0, n = _table.size(); i < n; ++i)
     _table[i].removeCell(c);
+  if (_table[0].empty()) // numCols becomes 0
+    reset();
 }
 
 // For the following getXXX() functions...  (except for getCount())
@@ -137,49 +145,69 @@ void DBTable::delCol(int c)
 // - Return "float" because NAN is a float.
 float DBTable::getMax(size_t c) const
 {
-  // TODO: get the max data in column #c
-  return 0.0;
+  // get the max data in column #c
+  vector<int> v = getColStrip(c);
+  if (v.size())
+    return *max_element(v.begin(), v.end());
+  else
+    return NAN;
 }
 
 float DBTable::getMin(size_t c) const
 {
-  // TODO: get the min data in column #c
-  return 0.0;
+  // get the min data in column #c
+  vector<int> v = getColStrip(c);
+  if (v.size())
+    return *min_element(v.begin(), v.end());
+  else
+    return NAN;
 }
 
 float DBTable::getSum(size_t c) const
 {
-  // TODO: compute the sum of data in column #c
-  return 0.0;
+  // compute the sum of data in column #c
+  vector<int> v = getColStrip(c);
+  float sum = 0;
+  for (int &i: v)
+    sum += i;
+  if (v.size())
+    return sum;
+  else
+    return NAN;
 }
 
 int DBTable::getCount(size_t c) const
 {
-  // TODO: compute the number of distinct data in column #c
+  // compute the number of distinct data in column #c
   // - Ignore null cells
-  return 0;
+  vector<int> v = getColStrip(c);
+  set<int> set_v(v.begin(), v.end());
+  return set_v.size();
 }
 
 float DBTable::getAve(size_t c) const
 {
-  // TODO: compute the average of data in column #c
-  return 0.0;
+  // compute the average of data in column #c
+  vector<int> v = getColStrip(c);
+  if (v.size())
+    return getSum(c) / v.size();
+  else
+    return NAN;
 }
 
 void DBTable::sort(const struct DBSort& s)
 {
-  // TODO: sort the data according to the order of columns in 's'
+  // sort the data according to the order of columns in 's'
+  stable_sort(_table.begin(), _table.end(), s);
 }
 
 void DBTable::printCol(size_t c) const
 {
-  // TODO: to print out a column.
+  // to print out a column.
   // - Data are seperated by a space. No trailing space at the end.
   // - Null cells are printed as '.'
-  vector<int> v;
-  for (size_t i=0; i<nRows(); ++i)
-    v.push_back(_table[i][c]);
-  cout << v << endl;
+
+  cout << getCol(c) << endl;
 }
 
 void DBTable::printSummary() const
@@ -192,3 +220,20 @@ void DBTable::printSummary() const
              << nv << ")" << endl;
 }
 
+vector<int> DBTable::getCol(size_t c) const
+{
+  // get #c col
+  vector<int> v;
+  for (size_t i=0; i<nRows(); ++i)
+    v.push_back(_table[i][c]);
+  return v;
+}
+vector<int> DBTable::getColStrip(size_t c) const
+{
+  // get #c col without null
+  vector<int> v;
+  for (size_t i=0; i<nRows(); ++i)
+    if (_table[i][c] != INT_MAX)
+      v.push_back(_table[i][c]);
+  return v;
+}

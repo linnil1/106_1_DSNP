@@ -75,8 +75,47 @@ bool initDbCmd()
 //----------------------------------------------------------------------
 CmdExecStatus DBAppendCmd::exec(const string& option)
 {
-  // TODO...
   // check option
+  vector<string> options;
+  if (!CmdExec::lexOptions(option, options))
+    return CMD_EXEC_ERROR;
+
+  if (options.size() == 0) {
+    errorOption(CMD_OPT_MISSING, "");
+    return CMD_EXEC_ERROR;
+  }
+
+  bool doRow = false;
+  if (myStrNCmp("-Row", options[0], 2) == 0)
+    doRow = true;
+  else if (myStrNCmp("-Column", options[0], 2) != 0)
+    return CmdExec::errorOption(CMD_OPT_ILLEGAL, options[0]);
+
+  if (options.size() == 1) {
+    errorOption(CMD_OPT_MISSING, options[0]);
+    return CMD_EXEC_ERROR;
+  }
+
+  // read in
+  vector<int> v;
+  for (size_t i=1; i<options.size(); ++i) {
+    int dig;
+    if (options[i] == "-")
+      v.push_back(INT_MAX);
+    else if (!myStr2Int(options[i], dig)) {
+      cerr << "Error: " << options[i] << " is not a number!!\n";
+      return CMD_EXEC_ERROR;
+    }
+    else
+      v.push_back(dig);
+  }
+
+  // push in
+  v.resize(doRow ? dbtbl.nCols() : dbtbl.nRows(), INT_MAX);
+  if (doRow)
+    dbtbl.addRow(v);
+  else
+    dbtbl.addCol(v);
 
   return CMD_EXEC_DONE;
 }
@@ -279,7 +318,7 @@ CmdExecStatus DBPrintCmd::exec(const string& option)
       errorOption(CMD_OPT_EXTRA, options[1]);
       return CMD_EXEC_ERROR;
     }
-    cout << dbtbl;
+    cout << dbtbl << endl;
   }
   else if (myStrNCmp("-Summary", options[0], 2) == 0) {
     if (options.size() > 1) {
@@ -318,11 +357,11 @@ CmdExecStatus DBPrintCmd::exec(const string& option)
     // out of range
     if (doRCO == 0)
       one = num;
-    if ((doRCO == 0 || doRCO == 2) && (one < 0 || one >= dbtbl.nRows())) {
+    if ((doRCO == 0 || doRCO == 2) && (one < 0 || (size_t)one >= dbtbl.nRows())) {
       cerr << "Error: Row index " << one << " is out of range!!\n";
       return CMD_EXEC_ERROR;
     }
-    else if ((doRCO == 1 || doRCO == 2) && (num < 0 || num >= dbtbl.nCols())) {
+    else if ((doRCO == 1 || doRCO == 2) && (num < 0 || (size_t)num >= dbtbl.nCols())) {
       cerr << "Error: Column index " << num << " is out of range!!\n";
       return CMD_EXEC_ERROR;
     }
