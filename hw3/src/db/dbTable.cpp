@@ -26,14 +26,14 @@ ostream& operator << (ostream& os, const DBRow& r)
   // to print out a row.
   // - Data are seperated by a space. No trailing space at the end.
   // - Null cells are printed as '.'
-  if (r.size())
-    os << r[0];
-  for (size_t i=1; i<r.size(); ++i)
+  for (size_t i=0; i<r.size(); ++i) {
+    if (i)
+      os << ' ';
     if (r[i] != INT_MAX)
-      os << ' ' << r[i];
+      os << r[i];
     else
-      os << " .";
-
+      os << ".";
+  }
   return os;
 }
 

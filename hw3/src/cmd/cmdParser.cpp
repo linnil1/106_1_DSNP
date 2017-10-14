@@ -27,15 +27,19 @@ void mybeep();
 // return false if file cannot be opened
 // Please refer to the comments in "DofileCmd::exec", cmdCommon.cpp
 
-#define DOFILE_STACK_LIMIT 4
+#define DOFILE_STACK_LIMIT 256
 bool CmdParser::openDofile(const string& dof)
 {
-  cout << _dofileStack.size() << endl;
   if (_dofileStack.size() == DOFILE_STACK_LIMIT) // prevent infinity recursive
     return false;
+  ifstream* tmp_dofile = new ifstream(dof.c_str());
+  if (!tmp_dofile->is_open()) {
+    delete tmp_dofile;
+    return false;
+  }
   _dofileStack.push(_dofile);
-  _dofile = new ifstream(dof.c_str());
-  return _dofile->is_open();
+  _dofile = tmp_dofile;
+  return true;
 }
 
 // Must make sure _dofile != 0
@@ -106,6 +110,7 @@ void CmdParser::printHelps() const
 {
   for(auto& cm: _cmdMap)
     cm.second->help();
+  cout << endl;
 }
 
 void CmdParser::printHistory(int nPrint) const
@@ -165,7 +170,7 @@ CmdExec* CmdParser::parseCmd(string& option)
 
 // This function is called by pressing 'Tab'.
 // It is to list the partially matched commands.
-// "str" is the partial string before current cursor position. It can be 
+// "str" is the partial string before current cursor position. It can be
 // a null string, or begin with ' '. The beginning ' ' will be ignored.
 //
 // Several possibilities after pressing 'Tab'
@@ -287,7 +292,7 @@ CmdExec* CmdParser::parseCmd(string& option)
 //    [After Tab]
 //    ==> Beep and stay in the same location
 
-string samePrefixGet(const vector<string> &v,const string &target)
+string samePrefixGet(const vector<string> &v, const string &target)
 {
   string same;
   if (v.size())
@@ -316,8 +321,9 @@ void prettyPrint(const vector<string>& v, int sw) {
 void CmdParser::listCmd(const string& str)
 {
   // remove heading space
-  string cmd = string(_readBuf, _readBufPtr);
-  cmd = cmd.substr(cmd.find_first_of(' '));
+  char *head = _readBuf;
+  for(;head<_readBufPtr && *head==' '; ++head);
+  string cmd = string(head, _readBufPtr);
 
   // get possible cmd
   vector<string> cmd_possible;
@@ -340,9 +346,9 @@ void CmdParser::listCmd(const string& str)
 
   // 3. auto complete cmd
   else if (cmd_possible.size() == 1) {
-    string same_part = samePrefixGet(cmd_possible, cmd) + ' ';
-    for (char &c: same_part)
-      insertChar(c);
+    for (size_t i=cmd.length(); i<cmd_possible[0].size(); ++i)
+      insertChar(cmd_possible[0][i]);
+    insertChar(' ');
     _tabPressCount = 0;
     return ;
   }
@@ -360,22 +366,19 @@ void CmdParser::listCmd(const string& str)
   if (_tabPressCount == 1) {
     cout << endl;
     e->usage(cout);
-    // cout << _tabPressCount << endl;
     reprintCmd();
     return ;
   }
 
   // 6. list file
 //  assert(_tabPressCount > 1);
-  string filename = cmd.substr(cmd.find_last_of(' ') + 1), filedir;
+  string filename = cmd.substr(cmd.find_last_of(' ') + 1), filedir = ".";
   // support folder browering
   size_t dirpos = filename.find_last_of('/');
   if (dirpos != string::npos) {
     filedir = filename.substr(0, dirpos);
     filename = filename.substr(dirpos+1);
   }
-  else
-    filedir = ".";
   vector<string> file_possible;
   listDir(file_possible, filename, filedir); // need to check return code
 
@@ -393,7 +396,7 @@ void CmdParser::listCmd(const string& str)
 
   string same_part = samePrefixGet(file_possible, filename);
   // 6.2 list file with prefix
-  if (same_part.empty()) {
+  if (same_part.empty() and file_possible.size() > 1) {
     prettyPrint(file_possible, 16);
     reprintCmd();
     return ;
@@ -409,7 +412,6 @@ void CmdParser::listCmd(const string& str)
       insertChar(c);
     return ;
   }
-//  cerr << "BUG\n";
 }
 
 // cmd is a copy of the original input
