@@ -74,7 +74,7 @@ public:
   virtual void help() const = 0;
 
   void setOptCmd(const string& str) { _optCmd = str; }
-  bool checkOptCmd(const string& check) const;
+  bool checkOptCmd(const string& check) const;  // Removed for TODO...
   const string& getOptCmd() const { return _optCmd; }
 
 protected:
@@ -105,7 +105,6 @@ public:                                       \
 class CmdParser
 {
 #define READ_BUF_SIZE    65536
-#define TAB_POSITION     8
 #define PG_OFFSET        10
 
 typedef map<const string, CmdExec*>   CmdMap;
@@ -114,7 +113,7 @@ typedef pair<const string, CmdExec*>  CmdRegPair;
 public:
   CmdParser(const string& p) : _prompt(p), _dofile(0),
     _readBufPtr(_readBuf), _readBufEnd(_readBuf),
-    _historyIdx(0), _tempCmdStored(false) {}
+    _historyIdx(0), _tabPressCount(0), _tempCmdStored(false) {}
   virtual ~CmdParser() {}
 
   bool openDofile(const string& dof);
@@ -133,12 +132,14 @@ private:
   void resetBufAndPrintPrompt() {
     _readBufPtr = _readBufEnd = _readBuf;
     *_readBufPtr = 0;
+    _tabPressCount = 0;
     printPrompt();
   }
   ParseChar getChar(istream&) const;
   bool readCmd(istream&);
   CmdExec* parseCmd(string&);
   void listCmd(const string&);
+  bool listCmdDir(const string&);  // Removed for TODO...
   void printPrompt() const { cout << _prompt; }
   bool pushDofile();  // Removed for TODO's
   bool popDofile();   // Removed for TODO's
@@ -166,10 +167,11 @@ private:
   char*     _readBufEnd;            // end of string position of _readBuf
                                     // make sure *_readBufEnd = 0
   vector<string>   _history;        // oldest:_history[0],latest:_hist.back()
-  int              _historyIdx;     // (1) Position to insert history string
+  int       _historyIdx;            // (1) Position to insert history string
                                     //     i.e. _historyIdx = _history.size()
                                     // (2) When up/down/pgUp/pgDn is pressed,
                                     //     position to history to retrieve
+  size_t    _tabPressCount;         // The number of tab pressed
   bool      _tempCmdStored;         // When up/pgUp is pressed, current line
                                     // will be stored in _history and
                                     // _tempCmdStored will be true.
