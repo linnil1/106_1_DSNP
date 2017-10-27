@@ -99,7 +99,13 @@ void MTNewCmd::help() const
 //----------------------------------------------------------------------
 CmdExecStatus MTDeleteCmd::exec(const string& option)
 {
-  // TODO
+  // TODO array random
+  string token;
+  if (!CmdExec::lexSingleOption(option, token, false))
+    return CMD_EXEC_ERROR;
+  int c;
+  if (!myStr2Int(token, c)) return CMD_EXEC_ERROR;
+  mtest.deleteObj(c);
 
   return CMD_EXEC_DONE;
 }
