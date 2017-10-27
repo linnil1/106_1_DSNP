@@ -16,7 +16,7 @@
 
 using namespace std;
 
-#define DefaultBlockSize 88 // 65536
+#define DefaultBlockSize 1088 // 65536
 
 // Turn this on for debugging
 #define MEM_DEBUG
@@ -140,7 +140,12 @@ class MemRecycleList
   // Release the memory occupied by the recycle list(s)
   // DO NOT release the memory occupied by MemMgr/MemBlock
   void reset() {
-    // TODO
+    _first = NULL;
+    MemRecycleList<T>* n = _nextList;
+    while(n) {
+      n->_first = NULL;
+      n = n->_nextList;
+    }
   }
 
   // Helper functions
@@ -198,7 +203,23 @@ public:
     #ifdef MEM_DEBUG
     cout << "Resetting memMgr...(" << b << ")" << endl;
     #endif // MEM_DEBUG
-    // TODO
+
+    // block
+    MemBlock<T>* p = _activeBlock;
+    while (p) {
+      MemBlock<T>* nxt =  p->getNextBlock();
+      delete p;
+      p = nxt;
+    }
+
+    // size
+    if (b)
+      _blockSize = b;
+    _activeBlock = new MemBlock<T>(NULL, _blockSize);
+
+    // recycle
+    for (int i=0; i<R_SIZE; ++i)
+      _recycleList[i].reset();
   }
   // Called by new
   T* alloc(size_t t) {
@@ -328,9 +349,6 @@ private:
     //    #ifdef MEM_DEBUG
     //    cout << "Memory acquired... " << ret << endl;
     //    #endif // MEM_DEBUG
-    if (_activeBlock->getMem(t, ret)) // I have promote t in getMem
-      return ret;
-
     size_t n = t == S ? 0 : t / S;
     if (_recycleList[n]._first) {
       #ifdef MEM_DEBUG
@@ -339,6 +357,9 @@ private:
       ret = _recycleList[n].popFront();
       return ret;
     }
+
+    if (_activeBlock->getMem(t, ret)) // I have promote t in getMem
+      return ret;
     else {
       _activeBlock = new MemBlock<T>(_activeBlock, _blockSize);
       _activeBlock->getMem(t, ret);

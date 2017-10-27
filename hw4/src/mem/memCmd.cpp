@@ -72,13 +72,50 @@ void MTResetCmd::help() const
 //----------------------------------------------------------------------
 CmdExecStatus MTNewCmd::exec(const string& option)
 {
-  // TODO array 
-  string token;
-  if (!CmdExec::lexSingleOption(option, token, false))
+  // read
+  vector<string> token;
+  int num=-1, arrnum=-1;
+  if (!CmdExec::lexOptions(option, token))
     return CMD_EXEC_ERROR;
-  int c;
-  if (!myStr2Int(token, c)) return CMD_EXEC_ERROR;
-  mtest.newObjs(c);
+
+  // error handle
+  for (size_t i=0; i<token.size(); ++i)
+    if (myStrNCmp("-Array", token[i], 1) == 0) {
+      if (arrnum != -1) {
+        CmdExec::errorOption(CMD_OPT_EXTRA, token[i]);
+        return CMD_EXEC_ERROR;
+      }
+      if (i + 1 >= token.size()) {
+        CmdExec::errorOption(CMD_OPT_MISSING, token[i]);
+        return CMD_EXEC_ERROR;
+      }
+      if (!myStr2Int(token[i + 1], arrnum) || arrnum <= 0) {
+        CmdExec::errorOption(CMD_OPT_ILLEGAL, token[i + 1]);
+        return CMD_EXEC_ERROR;
+      }
+      // true
+      i += 1;
+    }
+    else {
+      if (num != -1) {
+        CmdExec::errorOption(CMD_OPT_EXTRA, token[i]);
+        return CMD_EXEC_ERROR;
+      }
+      if (!myStr2Int(token[i], num) || num <= 0) {
+        CmdExec::errorOption(CMD_OPT_ILLEGAL, token[i]);
+        return CMD_EXEC_ERROR;
+      }
+    }
+
+  if (num == -1) {
+    CmdExec::errorOption(CMD_OPT_MISSING, "");
+    return CMD_EXEC_ERROR;
+  }
+
+  // call function
+  if (arrnum == -1)
+    mtest.newObjs(num);
+  // TODO array 
   return CMD_EXEC_DONE;
 }
 
@@ -99,13 +136,59 @@ void MTNewCmd::help() const
 //----------------------------------------------------------------------
 CmdExecStatus MTDeleteCmd::exec(const string& option)
 {
-  // TODO array random
-  string token;
-  if (!CmdExec::lexSingleOption(option, token, false))
+  vector<string> token;
+  int num=-1, randnum = -1, doarr=0;
+  if (!CmdExec::lexOptions(option, token))
     return CMD_EXEC_ERROR;
-  int c;
-  if (!myStr2Int(token, c)) return CMD_EXEC_ERROR;
-  mtest.deleteObj(c);
+
+  // error handle
+  for (size_t i=0; i<token.size(); ++i)
+    if (myStrNCmp("-Index", token[i], 1) == 0) {
+      if (num != -1 || randnum != -1) {
+        CmdExec::errorOption(CMD_OPT_EXTRA, token[i]);
+        return CMD_EXEC_ERROR;
+      }
+      if (i + 1 >= token.size()) {
+        CmdExec::errorOption(CMD_OPT_MISSING, token[i]);
+        return CMD_EXEC_ERROR;
+      }
+      if (!myStr2Int(token[i + 1], num) || num < 0) {
+        CmdExec::errorOption(CMD_OPT_ILLEGAL, token[i + 1]);
+        return CMD_EXEC_ERROR;
+      }
+      // true
+      i += 1;
+    }
+    else if (myStrNCmp("-Random", token[i], 1) == 0) {
+      if (num != -1 || randnum != -1) {
+        CmdExec::errorOption(CMD_OPT_EXTRA, token[i]);
+        return CMD_EXEC_ERROR;
+      }
+      if (i + 1 >= token.size()) {
+        CmdExec::errorOption(CMD_OPT_MISSING, token[i]);
+        return CMD_EXEC_ERROR;
+      }
+      if (!myStr2Int(token[i + 1], randnum) || randnum <= 0) {
+        CmdExec::errorOption(CMD_OPT_ILLEGAL, token[i + 1]);
+        return CMD_EXEC_ERROR;
+      }
+      // true
+      i += 1;
+    }
+    else if (myStrNCmp("-Array", token[i], 1) == 0) {
+      if (doarr) {
+        CmdExec::errorOption(CMD_OPT_EXTRA, token[i]);
+        return CMD_EXEC_ERROR;
+      }
+    }
+    else {
+      CmdExec::errorOption(CMD_OPT_ILLEGAL, token[i]);
+      return CMD_EXEC_ERROR;
+    }
+
+
+  // TODO array random
+  mtest.deleteObj(num);
 
   return CMD_EXEC_DONE;
 }
