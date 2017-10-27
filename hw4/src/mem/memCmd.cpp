@@ -18,11 +18,10 @@ extern MemTest mtest;  // defined in memTest.cpp
 
 bool initMemCmd()
 {
-  if (!(cmdMgr->regCmd("MTReset", 3, new MTResetCmd) &&
-      cmdMgr->regCmd("MTNew", 3, new MTNewCmd) &&
-      cmdMgr->regCmd("MTDelete", 3, new MTDeleteCmd) &&
-      cmdMgr->regCmd("MTPrint", 3, new MTPrintCmd)
-    )) {
+  if (!(cmdMgr->regCmd("MTReset" , 3, new MTResetCmd ) &&
+        cmdMgr->regCmd("MTNew"   , 3, new MTNewCmd   ) &&
+        cmdMgr->regCmd("MTDelete", 3, new MTDeleteCmd) &&
+        cmdMgr->regCmd("MTPrint" , 3, new MTPrintCmd ) )) {
     cerr << "Registering \"mem\" commands fails... exiting" << endl;
     return false;
   }
@@ -57,14 +56,14 @@ CmdExecStatus MTResetCmd::exec(const string& option)
 }
 
 void MTResetCmd::usage(ostream& os) const
-{  
+{
   os << "Usage: MTReset [(size_t blockSize)]" << endl;
 }
 
 void MTResetCmd::help() const
-{  
-  cout << setw(15) << left << "MTReset: " 
-    << "(memory test) reset memory manager" << endl;
+{
+  cout << setw(15) << left << "MTReset: "
+       << "(memory test) reset memory manager" << endl;
 }
 
 
@@ -79,14 +78,14 @@ CmdExecStatus MTNewCmd::exec(const string& option)
 }
 
 void MTNewCmd::usage(ostream& os) const
-{  
+{
   os << "Usage: MTNew <(size_t numObjects)> [-Array (size_t arraySize)]\n";
 }
 
 void MTNewCmd::help() const
-{  
-  cout << setw(15) << left << "MTNew: " 
-    << "(memory test) new objects" << endl;
+{
+  cout << setw(15) << left << "MTNew: "
+       << "(memory test) new objects" << endl;
 }
 
 
@@ -101,15 +100,15 @@ CmdExecStatus MTDeleteCmd::exec(const string& option)
 }
 
 void MTDeleteCmd::usage(ostream& os) const
-{  
+{
   os << "Usage: MTDelete <-Index (size_t objId) | "
-    << "-Random (size_t numRandId)> [-Array]" << endl;
+     << "-Random (size_t numRandId)> [-Array]" << endl;
 }
 
 void MTDeleteCmd::help() const
-{  
-  cout << setw(15) << left << "MTDelete: " 
-    << "(memory test) delete objects" << endl;
+{
+  cout << setw(15) << left << "MTDelete: "
+       << "(memory test) delete objects" << endl;
 }
 
 
@@ -127,12 +126,12 @@ CmdExecStatus MTPrintCmd::exec(const string& option)
 }
 
 void MTPrintCmd::usage(ostream& os) const
-{  
+{
   os << "Usage: MTPrint" << endl;
 }
 
 void MTPrintCmd::help() const
-{  
-  cout << setw(15) << left << "MTPrint: " 
-    << "(memory test) print memory manager info" << endl;
+{
+  cout << setw(15) << left << "MTPrint: "
+       << "(memory test) print memory manager info" << endl;
 }

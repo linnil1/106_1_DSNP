@@ -82,7 +82,7 @@ private:
     _totalUsedTime += _periodUsedTime;
     _currentTick = thisTick;
   }
-    
+
 };
 
 #endif // MY_USAGE_H

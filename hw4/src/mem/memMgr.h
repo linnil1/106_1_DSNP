@@ -27,25 +27,25 @@ MemMgr<T>* const T::_memMgr = new MemMgr<T>
 
 #define USE_MEM_MGR(T)                                                      \
 public:                                                                     \
-  void* operator new(size_t t) { return (void*)(_memMgr->alloc(t)); }      \
-  void* operator new[](size_t t) { return (void*)(_memMgr->allocArr(t)); } \
-  void  operator delete(void* p) { _memMgr->free((T*)p); }                 \
-  void  operator delete[](void* p) { _memMgr->freeArr((T*)p); }            \
-  static void memReset(size_t b = 0) { _memMgr->reset(b); }                \
-  static void memPrint() { _memMgr->print(); }                             \
+  void* operator new(size_t t) { return (void*)(_memMgr->alloc(t)); }       \
+  void* operator new[](size_t t) { return (void*)(_memMgr->allocArr(t)); }  \
+  void  operator delete(void* p) { _memMgr->free((T*)p); }                  \
+  void  operator delete[](void* p) { _memMgr->freeArr((T*)p); }             \
+  static void memReset(size_t b = 0) { _memMgr->reset(b); }                 \
+  static void memPrint() { _memMgr->print(); }                              \
 private:                                                                    \
   static MemMgr<T>* const _memMgr
 
-// You should use the following two MACROs whenever possible to 
+// You should use the following two MACROs whenever possible to
 // make your code 64/32-bit platform independent.
 // DO NOT use 4 or 8 for sizeof(size_t) in your code
 //
-#define SIZE_T      sizeof(size_t)
+#define SIZE_T       sizeof(size_t)
 #define SIZE_T_1    (sizeof(size_t) - 1)
 
 // TODO: Define them by SIZE_T and/or SIZE_T_1 MACROs.
 //
-// To promote 't' to the nearest multiple of SIZE_T; 
+// To promote 't' to the nearest multiple of SIZE_T;
 // e.g. Let SIZE_T = 8;  toSizeT(7) = 8, toSizeT(12) = 16
 #define toSizeT(t)      0  // TODO
 //
@@ -92,7 +92,7 @@ class MemBlock
     return true;
   }
   size_t getRemainSize() const { return size_t(_end - _ptr); }
-    
+
   MemBlock<T>* getNextBlock() const { return _nextBlock; }
 
   // Data members
@@ -157,7 +157,7 @@ class MemRecycleList
   size_t              _arrSize;   // the array size of the recycled data
   T*                  _first;     // the first recycled data
   MemRecycleList<T>*  _nextList;  // next MemRecycleList
-                      //      with _arrSize + x*R_SIZE
+                                  //      with _arrSize + x*R_SIZE
 };
 
 template <class T>
