@@ -16,8 +16,10 @@
 
 using namespace std;
 
+#define DefaultBlockSize 88 // 65536
+
 // Turn this on for debugging
-// #define MEM_DEBUG
+#define MEM_DEBUG
 
 //--------------------------------------------------------------------------
 // Define MACROs
@@ -47,7 +49,7 @@ private:                                                                    \
 //
 // To promote 't' to the nearest multiple of SIZE_T;
 // e.g. Let SIZE_T = 8;  toSizeT(7) = 8, toSizeT(12) = 16
-#define toSizeT(t)      0  // TODO
+#define toSizeT(t)      t + (SIZE_T - (t) % SIZE_T) % SIZE_T
 //
 // To demote 't' to the nearest multiple of SIZE_T
 // e.g. Let SIZE_T = 8;  downtoSizeT(9) = 8, downtoSizeT(100) = 96
@@ -89,6 +91,10 @@ class MemBlock
   // 4. Return false if not enough memory
   bool getMem(size_t t, T*& ret) {
     // TODO
+    if (getRemainSize() < t)
+      return false;
+    ret = (T*)_ptr;
+    _ptr += toSizeT(t);
     return true;
   }
   size_t getRemainSize() const { return size_t(_end - _ptr); }
@@ -166,7 +172,7 @@ class MemMgr
   #define S sizeof(T)
 
 public:
-  MemMgr(size_t b = 65536) : _blockSize(b) {
+  MemMgr(size_t b = DefaultBlockSize) : _blockSize(b) {
     assert(b % SIZE_T == 0);
     _activeBlock = new MemBlock<T>(0, _blockSize);
     for (int i = 0; i < R_SIZE; ++i)
@@ -228,13 +234,12 @@ public:
   }
   void print() const {
     cout << "=========================================" << endl
-      << "=              Memory Manager           =" << endl
-      << "=========================================" << endl
-      << "* Block size            : " << _blockSize << " Bytes" << endl
-      << "* Number of blocks      : " << getNumBlocks() << endl
-      << "* Free mem in last block: " << _activeBlock->getRemainSize()
-      << endl
-      << "* Recycle list          : " << endl;
+         << "=              Memory Manager           =" << endl
+         << "=========================================" << endl
+         << "* Block size            : " << _blockSize << " Bytes" << endl
+         << "* Number of blocks      : " << getNumBlocks() << endl
+         << "* Free mem in last block: " << _activeBlock->getRemainSize() << endl
+         << "* Recycle list          : " << endl;
     int i = 0, count = 0;
     while (i < R_SIZE) {
       const MemRecycleList<T>* ll = &(_recycleList[i]);
@@ -242,7 +247,7 @@ public:
         size_t s = ll->numElm();
         if (s) {
           cout << "[" << setw(3) << right << ll->_arrSize << "] = "
-            << setw(10) << left << s;
+               << setw(10) << left << s;
           if (++count % 4 == 0) cout << endl;
         }
         ll = ll->_nextList;
@@ -320,12 +325,22 @@ private:
     //    #ifdef MEM_DEBUG
     //    cout << "Memory acquired... " << ret << endl;
     //    #endif // MEM_DEBUG
+    if (_activeBlock->getMem(t, ret)) // I have promote t in getMem
+      return ret;
+    _activeBlock = new MemBlock<T>(_activeBlock, _blockSize);
+    _activeBlock->getMem(t, ret);
+
     return ret;
   }
   // Get the currently allocated number of MemBlock's
-  size_t getNumBlocks() const {
-    // TODO
-    return 0;
+  size_t getNumBlocks() const { // same as numElm in recycle list
+    size_t count = 0;
+    MemBlock<T>* p = _activeBlock;
+    while (p) {
+      p = p->getNextBlock();
+      ++count;
+    }
+    return count;
   }
 
 };

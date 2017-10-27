@@ -72,8 +72,13 @@ void MTResetCmd::help() const
 //----------------------------------------------------------------------
 CmdExecStatus MTNewCmd::exec(const string& option)
 {
-  // TODO
-
+  // TODO array 
+  string token;
+  if (!CmdExec::lexSingleOption(option, token, false))
+    return CMD_EXEC_ERROR;
+  int c;
+  if (!myStr2Int(token, c)) return CMD_EXEC_ERROR;
+  mtest.newObjs(c);
   return CMD_EXEC_DONE;
 }
 

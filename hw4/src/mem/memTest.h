@@ -57,7 +57,8 @@ public:
 
   // Allocate "n" number of MemTestObj elements
   void newObjs(size_t n) {
-    // TODO
+    for (size_t i=0; i<n; ++i)
+      _objList.push_back(new MemTestObj);
   }
   // Allocate "n" number of MemTestObj arrays with size "s"
   void newArrs(size_t n, size_t s) {
@@ -79,9 +80,9 @@ public:
     MemTestObj::memPrint();
     #endif // MEM_MGR_H
     cout << "=========================================" << endl
-      << "=             class MemTest             =" << endl
-      << "=========================================" << endl
-      << "Object list ---" << endl;
+         << "=             class MemTest             =" << endl
+         << "=========================================" << endl
+         << "Object list ---" << endl;
     size_t i = 0;
     while (i < _objList.size()) {
       cout << (_objList[i]? 'o' : 'x');
