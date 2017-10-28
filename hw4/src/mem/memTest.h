@@ -62,18 +62,22 @@ public:
   }
   // Allocate "n" number of MemTestObj arrays with size "s"
   void newArrs(size_t n, size_t s) {
-    // TODO
+    for (size_t i=0; i<n; ++i)
+      _arrList.push_back(new MemTestObj[s]);
   }
   // Delete the object with position idx in _objList[]
   void deleteObj(size_t idx) {
     assert(idx < _objList.size());
-    delete _objList[idx];
+    if (_objList[idx])
+      delete _objList[idx];
     _objList[idx] = NULL;
   }
   // Delete the array with position idx in _arrList[]
   void deleteArr(size_t idx) {
     assert(idx < _arrList.size());
-    // TODO
+    if (_arrList[idx])
+      delete[] _arrList[idx];
+    _arrList[idx] = NULL;
   }
 
   void print() const {

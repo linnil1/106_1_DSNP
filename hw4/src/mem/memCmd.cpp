@@ -115,7 +115,8 @@ CmdExecStatus MTNewCmd::exec(const string& option)
   // call function
   if (arrnum == -1)
     mtest.newObjs(num);
-  // TODO array 
+  else
+    mtest.newArrs(num, arrnum);
   return CMD_EXEC_DONE;
 }
 
@@ -180,6 +181,7 @@ CmdExecStatus MTDeleteCmd::exec(const string& option)
         CmdExec::errorOption(CMD_OPT_EXTRA, token[i]);
         return CMD_EXEC_ERROR;
       }
+      doarr = 1;
     }
     else {
       CmdExec::errorOption(CMD_OPT_ILLEGAL, token[i]);
@@ -187,8 +189,11 @@ CmdExecStatus MTDeleteCmd::exec(const string& option)
     }
 
 
-  // TODO array random
-  mtest.deleteObj(num);
+  // TODO random
+  if (doarr)
+    mtest.deleteArr(num);
+  else
+    mtest.deleteObj(num);
 
   return CMD_EXEC_DONE;
 }
