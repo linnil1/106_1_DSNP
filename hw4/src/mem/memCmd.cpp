@@ -115,8 +115,12 @@ CmdExecStatus MTNewCmd::exec(const string& option)
   // call function
   if (arrnum == -1)
     mtest.newObjs(num);
-  else
-    mtest.newArrs(num, arrnum);
+  else {
+    try{
+      mtest.newArrs(num, arrnum);
+    }
+    catch (bad_alloc) {} // do nothing
+  }
   return CMD_EXEC_DONE;
 }
 
@@ -188,13 +192,38 @@ CmdExecStatus MTDeleteCmd::exec(const string& option)
       return CMD_EXEC_ERROR;
     }
 
+  if (num == -1 && randnum == -1) {
+    CmdExec::errorOption(CMD_OPT_MISSING, "");
+    return CMD_EXEC_ERROR;
+  }
 
-  // TODO random
-  if (doarr)
-    mtest.deleteArr(num);
+  // main
+  if (randnum == -1)
+    if (doarr) {
+      if ((size_t)num >= mtest.getArrListSize()) {
+        cerr << "Size of array list (" << mtest.getArrListSize()
+             << ") is <= " << num << "!!\n";
+        CmdExec::errorOption(CMD_OPT_ILLEGAL, to_string(num));
+        return CMD_EXEC_ERROR;
+      }
+      mtest.deleteArr(num);
+    }
+    else {
+      if ((size_t)num >= mtest.getObjListSize()) {
+        cerr << "Size of object list (" << mtest.getObjListSize()
+             << ") is <= " << num << "!!\n";
+        CmdExec::errorOption(CMD_OPT_ILLEGAL, to_string(num));
+        return CMD_EXEC_ERROR;
+      }
+      mtest.deleteObj(num);
+    }
   else
-    mtest.deleteObj(num);
-
+    if (doarr)
+      for (int i=0; i<randnum; ++i)
+        mtest.deleteArr(rnGen(mtest.getArrListSize()));
+    else
+      for (int i=0; i<randnum; ++i)
+        mtest.deleteObj(rnGen(mtest.getObjListSize()));
   return CMD_EXEC_DONE;
 }
 

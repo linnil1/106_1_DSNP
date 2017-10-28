@@ -16,10 +16,10 @@
 
 using namespace std;
 
-#define DefaultBlockSize 1088 // 65536
+#define DefaultBlockSize 65536
 
 // Turn this on for debugging
-#define MEM_DEBUG
+// #define MEM_DEBUG
 
 //--------------------------------------------------------------------------
 // Define MACROs
@@ -120,7 +120,7 @@ class MemRecycleList
   // Member functions
   // ----------------
   size_t getArrSize() const { return _arrSize; }
-  MemRecycleList<T>* getNextList() const { return _nextList; }
+  // MemRecycleList<T>* getNextList() const { return _nextList; }
   void setNextList(MemRecycleList<T>* l) { _nextList = l; }
   // pop out the first element in the recycle list
   T* popFront() {
@@ -180,11 +180,8 @@ public:
   MemMgr(size_t b = DefaultBlockSize) : _blockSize(b) {
     assert(b % SIZE_T == 0);
     _activeBlock = new MemBlock<T>(NULL, _blockSize);
-    for (int i = 0; i < R_SIZE; ++i) {
+    for (int i = 0; i < R_SIZE; ++i)
       _recycleList[i]._arrSize = i;
-      _recycleList[i]._first = NULL; // init
-      _recycleList[i]._nextList = NULL; // init
-    }
   }
   ~MemMgr() { reset(); delete _activeBlock; }
 
@@ -272,7 +269,7 @@ public:
       while (ll != 0) {
         size_t s = ll->numElm();
         if (s) {
-          cout << "[" << setw(3) << right << ll->_arrSize << "] = "
+          cout << "[" << setw(3) << right << ll->getArrSize() << "] = "
                << setw(10) << left << s;
           if (++count % 4 == 0) cout << endl;
         }
@@ -311,8 +308,10 @@ private:
   //         by the MTNew command, not MTDelete.
   MemRecycleList<T>* getMemRecycleList(size_t n) {
     size_t m = n % R_SIZE;
-    MemRecycleList<T>* l = &(_recycleList[m]);
-    while (l->_arrSize != n) {
+    MemRecycleList<T> *l = &(_recycleList[m]);
+    while (l->getArrSize() != n) {
+      if (!l->_nextList) // not find: new one
+        l->setNextList(new MemRecycleList<T>(n));
       l = l->_nextList;
     }
     return l;
@@ -360,10 +359,9 @@ private:
       // Note: recycle to the as biggest array index as possible
       // Note: rn is the array size
       size_t rt = _activeBlock->getRemainSize();
-      assert(rt % SIZE_T == 0);
-      if (rt >= toSizeT(S + 8)) {
+      if (rt >= toSizeT(S + SIZE_T)) {
         size_t rn = getArraySize(rt);
-        _activeBlock->getMem(rn * S + 8, ret);
+        _activeBlock->getMem(rn * S + SIZE_T, ret);
         getMemRecycleList(rn)->pushFront(ret);
         #ifdef MEM_DEBUG
         cout << "Recycling " << ret << " to _recycleList[" << rn << "]\n";
@@ -375,9 +373,10 @@ private:
       #ifdef MEM_DEBUG
       cout << "New MemBlock... " << _activeBlock << endl;
       #endif // MEM_DEBUG
+      _activeBlock->getMem(t, ret);
     }
 
-    _activeBlock->getMem(t, ret);
+
     #ifdef MEM_DEBUG
     cout << "Memory acquired... " << ret << endl;
     #endif // MEM_DEBUG

@@ -68,7 +68,7 @@ public:
   // Delete the object with position idx in _objList[]
   void deleteObj(size_t idx) {
     assert(idx < _objList.size());
-    if (_objList[idx])
+    if (_objList[idx]) // else: do nothing
       delete _objList[idx];
     _objList[idx] = NULL;
   }
