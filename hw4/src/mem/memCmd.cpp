@@ -197,8 +197,8 @@ CmdExecStatus MTDeleteCmd::exec(const string& option)
     return CMD_EXEC_ERROR;
   }
 
-  // main
-  if (randnum == -1)
+  // check size
+  if (randnum == -1) {
     if (doarr) {
       if ((size_t)num >= mtest.getArrListSize()) {
         cerr << "Size of array list (" << mtest.getArrListSize()
@@ -206,7 +206,6 @@ CmdExecStatus MTDeleteCmd::exec(const string& option)
         CmdExec::errorOption(CMD_OPT_ILLEGAL, to_string(num));
         return CMD_EXEC_ERROR;
       }
-      mtest.deleteArr(num);
     }
     else {
       if ((size_t)num >= mtest.getObjListSize()) {
@@ -215,15 +214,40 @@ CmdExecStatus MTDeleteCmd::exec(const string& option)
         CmdExec::errorOption(CMD_OPT_ILLEGAL, to_string(num));
         return CMD_EXEC_ERROR;
       }
-      mtest.deleteObj(num);
     }
-  else
+  }
+  else {
+    if (doarr) {
+      if (mtest.getArrListSize() == 0) {
+        cerr << "Size of array list is 0!!\n";
+        CmdExec::errorOption(CMD_OPT_ILLEGAL, "-R");
+        return CMD_EXEC_ERROR;
+      }
+    }
+    else  {
+      if (mtest.getObjListSize() == 0) {
+        cerr << "Size of object list is 0!!\n";
+        CmdExec::errorOption(CMD_OPT_ILLEGAL, "-R");
+        return CMD_EXEC_ERROR;
+      }
+    }
+  }
+
+  // main
+  if (randnum == -1) {
+    if (doarr)
+      mtest.deleteArr(num);
+    else
+      mtest.deleteObj(num);
+  }
+  else {
     if (doarr)
       for (int i=0; i<randnum; ++i)
         mtest.deleteArr(rnGen(mtest.getArrListSize()));
     else
       for (int i=0; i<randnum; ++i)
         mtest.deleteObj(rnGen(mtest.getObjListSize()));
+  }
   return CMD_EXEC_DONE;
 }
 

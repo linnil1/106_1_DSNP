@@ -359,7 +359,7 @@ private:
       // Note: recycle to the as biggest array index as possible
       // Note: rn is the array size
       size_t rt = _activeBlock->getRemainSize();
-      if (rt >= toSizeT(S + SIZE_T)) {
+      if (rt >= toSizeT(S)) {
         size_t rn = getArraySize(rt);
         _activeBlock->getMem(rn * S + SIZE_T, ret);
         getMemRecycleList(rn)->pushFront(ret);
