@@ -220,14 +220,14 @@ CmdExecStatus MTDeleteCmd::exec(const string& option)
     if (doarr) {
       if (mtest.getArrListSize() == 0) {
         cerr << "Size of array list is 0!!\n";
-        CmdExec::errorOption(CMD_OPT_ILLEGAL, "-R");
+        CmdExec::errorOption(CMD_OPT_ILLEGAL, "");
         return CMD_EXEC_ERROR;
       }
     }
     else  {
       if (mtest.getObjListSize() == 0) {
         cerr << "Size of object list is 0!!\n";
-        CmdExec::errorOption(CMD_OPT_ILLEGAL, "-R");
+        CmdExec::errorOption(CMD_OPT_ILLEGAL, "");
         return CMD_EXEC_ERROR;
       }
     }

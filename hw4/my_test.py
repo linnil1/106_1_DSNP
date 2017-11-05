@@ -47,7 +47,7 @@ def myops():
   global n, an
   n = 0
   an = 0
-  for i in range(5):
+  for i in range(100):
     myop()
   print("mtr " + str(random.random_integers(1000,10000)), file=f)
 
