@@ -165,9 +165,9 @@ private:
     #endif // RANDOM_ACCESS
   }
   void printData(size_t idx, AdtType<AdtTestObj>::iterator li,
-            size_t r) const {
+                 size_t r) const {
     cout << "[" << setw(3) << right << idx << "] = "
-      << setw(3) << right << *li << "   ";
+         << setw(3) << right << *li << "   ";
     if (idx % N == r) cout << endl;
   }
 };
