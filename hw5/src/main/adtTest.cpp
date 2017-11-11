@@ -13,7 +13,7 @@
 //
 AdtTest adtTest;
 
-int AdtTestObj::_strLen = 5;
+int AdtTestObj::_strLen = 6;
 
 bool initAdtCmd()
 {
