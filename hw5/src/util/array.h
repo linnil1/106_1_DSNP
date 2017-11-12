@@ -67,12 +67,13 @@ public:
     _data[_size++] = x;
   }
   void pop_front() { 
-    _isSorted = false;
-    assert(_size > 0);
-    _data[0] = _data[--_size];
+    if (_size <= 0)
+        return ;
+    erase(begin());
   }
   void pop_back() { 
-    assert(_size > 0);
+    if (_size <= 0)
+        return ;
     --_size;
   }
   bool erase(iterator pos) {
@@ -122,7 +123,7 @@ private:
   size_t        _capacity;   // max number of elements
   mutable bool  _isSorted;   // (optionally) to indicate the array is sorted
 
-  // [OPTIONAL TODO] Helper functions; called by public member functions
+  // Helper functions; called by public member functions
 };
 
 #endif // ARRAY_H
