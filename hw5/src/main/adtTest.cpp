@@ -202,15 +202,6 @@ void AdtSortCmd::help() const
 //----------------------------------------------------------------------
 CmdExecStatus AdtPrintCmd::exec(const string& option)
 {
-  /*
-  AdtType<AdtTestObj>  test;
-  test.push_back(AdtTestObj("abc"));
-  test.push_back(AdtTestObj("cdf"));
-  AdtType<AdtTestObj>::iterator li = test.begin();
-  cout << *(li+1) << endl;
-  cout << *li << endl;
-  */
-
   // check option
   vector<string> options;
   if (!CmdExec::lexOptions(option, options))
