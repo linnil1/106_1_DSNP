@@ -20,8 +20,8 @@ template <class T>
 class Array
 {
 public:
-  Array() : _data(new T[1]), _size(0), _capacity(1), _isSorted(true) {}
-  ~Array() { delete []_data; }
+  Array() : _data(NULL), _size(0), _capacity(0), _isSorted(true) {}
+  ~Array() { if(_capacity) delete []_data; }
 
   // DO NOT add any more data member or function for class iterator
   class iterator
@@ -60,50 +60,55 @@ public:
   T& operator [] (size_t i) { return _data[i]; }
   const T& operator [] (size_t i) const { return _data[i]; }
 
-  void push_back(const T& x) { 
-    if ( _size + 1 == _capacity)
-      reserve(_capacity << 1);
+  void push_back(const T& x) {
+    if (_size + 1 > _capacity) {
+      if (_capacity == 0)
+        reserve(_size + 1);
+      else
+        reserve(_capacity << 1);
+    }
     _isSorted = false;
     _data[_size++] = x;
   }
-  void pop_front() { 
+  void pop_front() {
     if (_size <= 0)
         return ;
     erase(begin());
   }
-  void pop_back() { 
+  void pop_back() {
     if (_size <= 0)
         return ;
     --_size;
   }
   bool erase(iterator pos) {
     _isSorted = false;
-    if (!(pos._node < _data + _size && _data <= pos._node))
+    if (!(getNode(pos) < _data + _size && _data <= getNode(pos)))
       return false;
-    _data[pos._node - _data] = _data[--_size];
+    _data[getIndex(pos, begin())] = _data[--_size];
     return true;
   }
-  bool erase(const T& x) { 
+  bool erase(const T& x) {
     _isSorted = false;
     for(iterator it = begin(); it != end(); ++it)
       if (*it == x)
         return erase(it);
-    return false; 
+    return false;
   }
   void clear() {
     _size = 0;
     _isSorted = true;
-    reserve(1);
+    reserve(0);
   }
-  void sort() const { 
-    if (!empty() && !_isSorted) { 
-      ::sort(_data, _data+_size);
+  void sort() const {
+    if (!empty() && !_isSorted) {
+      //stable_sort(_data, end());
+      mySort(begin(), end());
       _isSorted = true;
     }
   }
 
   // Nice to have, but not required in this homework...
-  void reserve(size_t n) { 
+  void reserve(size_t n) {
     if (n < 1 && n <= _size)
       return ;
     T* tmpdata = new T[n];
@@ -124,6 +129,39 @@ private:
   mutable bool  _isSorted;   // (optionally) to indicate the array is sorted
 
   // Helper functions; called by public member functions
+  // it should be written in iterator
+  size_t getIndex(const iterator &a, const iterator &b) const { return getNode(a) - getNode(b); }
+  T* getNode(const iterator &a) const { return a._node; }
+
+  void mySort(iterator it_start, iterator it_end) const {
+    size_t sum = getIndex(it_end, it_start);
+    if (sum <= 1)
+      return ;
+    // divide and concour
+    iterator it_mid = it_start + sum / 2;
+    mySort(it_start, it_mid);
+    mySort(it_mid, it_end);
+
+    // merge it with buffer
+    // pre-process
+    // this should use Array we defined, but use it will conflict urGen()
+    size_t num_start = sum / 2, i = 0;
+    T** temparr = new T* [num_start];
+    for(iterator it = it_start; it != it_mid; ++it)
+      temparr[i++] = new T(*it);
+
+    // main merge
+    for (size_t i=0; i<num_start; ++i) {
+      while (it_mid != it_end && *temparr[i] > *it_mid)
+        *(it_start++) = *(it_mid++);
+      *(it_start++) = *temparr[i];
+    }
+    // delete it
+    for (size_t i=0; i<num_start; ++i)
+      delete temparr[i];
+    delete[] temparr;
+  }
+
 };
 
 #endif // ARRAY_H
