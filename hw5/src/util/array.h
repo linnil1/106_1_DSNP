@@ -70,25 +70,17 @@ public:
     _isSorted = false;
     _data[_size++] = x;
   }
-  void pop_front() {
-    if (_size <= 0)
-        return ;
-    erase(begin());
-  }
-  void pop_back() {
-    if (_size <= 0)
-        return ;
-    --_size;
-  }
+  void pop_front() { erase(begin()); }
+  void pop_back() {  erase(--end()); }
   bool erase(iterator pos) {
-    _isSorted = false;
-    if (!(getNode(pos) < _data + _size && _data <= getNode(pos)))
+    if (empty())
       return false;
+    _isSorted = false;
+    assert(getNode(pos) < _data + _size && _data <= getNode(pos));
     _data[getIndex(pos, begin())] = _data[--_size];
     return true;
   }
   bool erase(const T& x) {
-    _isSorted = false;
     for(iterator it = begin(); it != end(); ++it)
       if (*it == x)
         return erase(it);
@@ -101,7 +93,7 @@ public:
   }
   void sort() const {
     if (!empty() && !_isSorted) {
-      //stable_sort(_data, end());
+      // stable_sort(_data, _data + _size);
       mySort(begin(), end());
       _isSorted = true;
     }
@@ -137,29 +129,42 @@ private:
     size_t sum = getIndex(it_end, it_start);
     if (sum <= 1)
       return ;
+    if (sum < 4) { // insertion sort
+      for (iterator it=it_start; it != it_end; ++it) {
+        size_t max_num = 0;
+        for (size_t num=1; num < sum; ++num)
+          if (*(it + num) < *(it + max_num))
+            max_num = num;
+        if (max_num)
+          swap(*it, *(it+max_num));
+      }
+      return ;
+    }
     // divide and concour
     iterator it_mid = it_start + sum / 2;
     mySort(it_start, it_mid);
     mySort(it_mid, it_end);
 
     // merge it with buffer
-    // pre-process
-    // this should use Array we defined, but use it will conflict urGen()
-    size_t num_start = sum / 2, i = 0;
-    T** temparr = new T* [num_start];
-    for(iterator it = it_start; it != it_mid; ++it)
-      temparr[i++] = new T(*it);
+    // store index where elements should be
+    size_t arr[sum],
+           num_start = sum / 2;
+    for (size_t i=0; i<sum; ++i)
+      arr[i] = i;
 
     // main merge
-    for (size_t i=0; i<num_start; ++i) {
-      while (it_mid != it_end && *temparr[i] > *it_mid)
-        *(it_start++) = *(it_mid++);
-      *(it_start++) = *temparr[i];
+    for (size_t i=0, count=0; i<num_start; ++i) {
+      while (it_mid != it_end && *(it_start + i) > *it_mid)
+        arr[getIndex(it_mid++, it_start)] = count++;
+      arr[i] = count++;
     }
-    // delete it
-    for (size_t i=0; i<num_start; ++i)
-      delete temparr[i];
-    delete[] temparr;
+
+    // swap by index array
+    for (size_t i=0; i<sum; ++i)
+      while (arr[i] != i) {
+        swap(*(it_start + i), *(it_start + arr[i]));
+        swap(arr[i], arr[arr[i]]);
+      }
   }
 
 };
