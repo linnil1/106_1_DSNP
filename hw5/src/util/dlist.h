@@ -78,24 +78,24 @@ public:
   size_t size() const {
     size_t sum = 0;
     for(iterator it=begin(); it!=end(); ++it)
-      ++ sum;
+      ++sum;
     return sum;
   }
 
   void push_back(const T& x) { insert(end(), x); _isSorted = false; }
   void pop_front() { erase(begin()); }
-  void pop_back()  { iterator e = --end(); erase(e); }
+  void pop_back()  { erase(--end()); }
 
   // return false if nothing to erase
-  bool erase(iterator pos) { _isSorted = false; return remove(pos._node); }
+  bool erase(iterator pos) { return remove(pos._node); }
   bool erase(const T& x) {
     for(iterator it=begin(); it!=end(); ++it)
       if (*it == x)
         return erase(it);
     return false;
   }
-
-  void clear() { while(!empty()) erase(begin()); _isSorted = true; }  // delete all nodes except for the dummy node
+  // delete all nodes except for the dummy node
+  void clear() { while(!empty()) erase(begin()); _isSorted = true; }
 
   void sort() const { if (!_isSorted){ stable_sort(begin(), end()); _isSorted = true;} }
 
@@ -125,7 +125,8 @@ private:
   DListNode<T>* moveOut(iterator it) const {
     return moveOut(it._node);
   }
-  DListNode<T>* moveOut(DListNode<T>* node) const { assert(node != _head);
+  DListNode<T>* moveOut(DListNode<T>* node) const {
+    assert(node != _head);
     node->_next->_prev = node->_prev;
     node->_prev->_next = node->_next;
     return node;
@@ -133,23 +134,24 @@ private:
   bool remove(DListNode<T>* node) {
     if (node == _head)
       return false;
+    _isSorted = false;
     delete moveOut(node);
     return true;
   }
+  // return first element's iterator
   iterator stable_sort(iterator it_start, iterator it_end) const {
-    // find middle for separting array
+    // caculate sum
     size_t sum = 0;
-    iterator it_mid = it_start;
-    for(iterator it=it_start; it!=it_end; ++it) {
-      if (++sum % 2 == 0)
-        ++it_mid;
-    }
-
+    for(iterator it=it_start; it!=it_end; ++it, ++sum);
     // end condition
     assert(sum > 0);
     if (sum <= 1)
       return it_start;
 
+    // find middle for separting array
+    iterator it_mid = it_start;
+    for(size_t i=sum/2; i>0; --i)
+      ++it_mid;
     // divide and concour
     it_start = stable_sort(it_start, it_mid);
     it_mid = stable_sort(it_mid, it_end);

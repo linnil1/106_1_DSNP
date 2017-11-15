@@ -48,7 +48,8 @@ public:
     _head = new BSTreeNode<T>(T(string(1, char(127)))); // dummy largest
     _head->_p = _head->_lr[1] = _head;
   }
-  ~BSTree() { clear(); delete _head; } class iterator
+  ~BSTree() { clear(); delete _head; }
+  class iterator
   {
     friend class BSTree;
 
@@ -91,7 +92,7 @@ public:
     }
   };
 
-  iterator begin() const { iterator it(_head); ++it; return it; }
+  iterator begin() const { return ++iterator(_head); }
   iterator end() const { return _head; }
   bool empty() const { return !_head->_lr[0]; }
   size_t size() const { return _size; }
@@ -131,7 +132,7 @@ public:
       assert(false);
     return false;
   }
-  bool erase(const T& x) { 
+  bool erase(const T& x) {
     BSTreeNode<T>* f = find(x);
     if (**f == x)
       return erase(f);
@@ -139,7 +140,7 @@ public:
   }
   void clear() {
     recurClear(_head->_lr[0]);
-    _head->_lr[1] = NULL;
+    _head->_lr[0] = NULL;
     _size = 0;
   }
   void print() const { recurPrint(_head->_lr[0]); }
