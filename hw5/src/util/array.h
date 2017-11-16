@@ -132,7 +132,7 @@ private:
     if (sum < 4) { // insertion sort
       for (iterator it=it_start; it != it_end; ++it) {
         size_t max_num = 0;
-        for (size_t num=1; num < sum; ++num)
+        for (size_t num=1; it + num != it_end; ++num)
           if (*(it + num) < *(it + max_num))
             max_num = num;
         if (max_num)

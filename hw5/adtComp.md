@@ -1,4 +1,9 @@
 # HW05 adtComp
+## Author
+linnil1
+https://hackmd.io/s/SygLVDWOJM
+https://github.com/linnil1/106_1_DSNP/tree/master/hw5
+
 ## Array
 ### Implement
 Use a dynamic array to store elements,
@@ -12,8 +17,8 @@ Otherwise, remain same.
 ### Need to improve
 Iterator should overload `-` `<` which is easy for coding.
 
-### sort algorithm
-Because std::sort has many optimization methods, it's unfair to other sort written by me.
+### Sort algorithm
+Because `std::sort` has many optimization methods, it's unfair to other sort written by me.
 I write a merge sort (with buffer)
 But, there are a little difference:
 1. When I merge it, I create a array that store the index after sorted. (Linear merge is possible see https://en.wikipedia.org/wiki/Merge_algorithm#Merging_two_lists)
@@ -114,6 +119,24 @@ Period time used : 9.99 seconds
 Total time used  : 15.37 seconds
 Total memory used: 272.1 M Bytes
 ```
+11/16 Updated
+I had heard that reference is compiled by O3
+My BST with O3
+The result is not very far away from reference
+```
+adt> adtr 200
+adt> adta -r 1000000
+adt> usage
+Period time used : 4.34 seconds
+Total time used  : 4.34 seconds
+Total memory used: 272 M Bytes
+
+adt> adta -r 100
+adt> usAGE
+Period time used : 0 seconds
+Total time used  : 4.34 seconds
+Total memory used: 272.4 M Bytes
+```
 
 ref BST
 ```
@@ -125,7 +148,6 @@ Total time used  : 3.62 seconds
 Total memory used: 272.3 M Bytes
 
 adt> adtdelete -r 100
-
 adt> usAGE 
 Period time used : 4.67 seconds
 Total time used  : 8.29 seconds
@@ -134,15 +156,22 @@ Total memory used: 272.3 M Bytes
 
 ### Delete
 1. If it is leaf, remove it.
-2. If it has only a leaf, remove it, and connnect parent and it's only, child.
+2. If it has only a leaf, remove it, and connnect parent and it's only child.
 3. If it is node, ++it to get the next one.
 The next one will have only a leaf or no leaf, remove it same as 1 or 2. and swap this node and next node.
 complexity `O(log N)`
 
-## find
+### find
 Just go down as BST properity, if find the first same thing return iterator.
-However, if you want to find where to insert and meet the same one, it should go to left tree (ff is not NULL), and find until left tree is NULL
+However, if you want to find where to insert and meet the same one, it should go to left tree (ff is not NULL), and find until left tree is NULL.
 complexity `O(log N)`
 
 So insert it N times, complexity `O(Nlog N)`
 
+
+## Summery
+I test three data structure with sorting.
+The result of sorting time is `dlist` < `BST` < `Array`.
+`Array` is easiest implement structure, but when sorting, it need lots of coping data.
+`dlist` cannot random access, however in merge sort algorithm, it can be very fast.
+`BST` is a structure that always maintain sorting order. In my test case, we use random data which make tree not very unbalanced.
