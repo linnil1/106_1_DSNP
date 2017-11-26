@@ -13,6 +13,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -43,8 +44,12 @@ public:
   void writeAag(ostream&) const;
 
 private:
+  void printVector(const vector<unsigned> &v) const;
   vector<CirGate*> _gates;
   unsigned MILOA[5];
+  vector<unsigned> _ins, _outs;
+  vector<unsigned> _floats[2];
+  stringstream _comments;
 };
 
 #endif // CIR_MGR_H

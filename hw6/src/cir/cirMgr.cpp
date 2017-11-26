@@ -166,44 +166,90 @@ bool CirMgr::readCircuit(const string& fileName)
   _gates.resize(MILOA[0] + MILOA[3] + 1);
   // I
   int nos = 2;
-  for (int i=0; i<MILOA[1]; ++i) {
+  for (unsigned i=0; i<MILOA[1]; ++i) {
     getline(fs, s);
     stringstream ss(s);
     int ind;
     ss >> ind;
-    _gates[ind >> 1] =  new GateIn(nos++);
+    _gates[ind >> 1] =  new GateIn(ind >> 1, nos++);
+    _ins.push_back(ind >> 1);
   }
   // O
-  for (int i=0; i<MILOA[3]; ++i) {
+  for (unsigned i=0; i<MILOA[3]; ++i) {
     getline(fs, s);
     stringstream ss(s);
     unsigned ind;
     ss >> ind;
-    _gates[MILOA[0] + i + 1] = new GateOut(nos++);
+    _gates[MILOA[0] + i + 1] = new GateOut(ind >> 1, nos++);
     _gates[MILOA[0] + i + 1]->setFanin(ind);
+    _outs.push_back(MILOA[0] + i + 1);
   }
   // A
-  for (int i=0; i<MILOA[4]; ++i) {
+  for (unsigned i=0; i<MILOA[4]; ++i) {
     getline(fs, s);
     stringstream ss(s);
     unsigned ind, in0, in1;
     ss >> ind >> in0 >> in1;
-    _gates[ind >> 1] = new GateAnd(nos++);
+    _gates[ind >> 1] = new GateAnd(ind >> 1, nos++);
     _gates[ind >> 1]->setFanin(in0);
     _gates[ind >> 1]->setFanin(in1);
   }
-  // TODO comments
-  // ...
+
+  // comments and symbols
+  while (getline(fs, s)) {
+    // comments
+    if (s == "c") {
+      _comments << fs.rdbuf();
+      break;
+    }
+    stringstream ss(s);
+    string name;
+    ss >> s >> name;
+    int ind;
+    myStr2Int(string(s.begin()+1, s.end()), ind);
+    cout << s    << endl;
+    cout << ind  << endl;
+    cout << name << endl;
+    if (s[0] == 'i')
+      _gates[_ins[ind]]->setName(name);
+    else if (s[0] == 'o')
+      _gates[_outs[ind]]->setName(name);
+    else
+      cerr << "ERROR\n";
+  }
   fs.close();
 
   // const
-  _gates[0] = new GateConst(0);
+  _gates[0] = new GateConst();
+
   // backward
   for (unsigned i=0; i<_gates.size(); ++i)
     if (_gates[i])
       for (unsigned &j:_gates[i]->getFanin())
         if (getGate(j >> 1))
-          getGate(j >> i)->setFanout(i);
+          getGate(j >> 1)->setFanout((i << 1) + (j & 1));
+
+  // find floating
+  for (unsigned i=1; i<_gates.size(); ++i)
+    if (_gates[i]) {
+      // float fanin
+      bool ok = true;
+      for (const unsigned &j:_gates[i]->getFanin()) {
+        CirGate *now = getGate(j >> 1);
+        if (!now || now->getType() == UNDEF_GATE) {
+          // Undef
+          ok = false;
+          if (!now)
+            _gates[j >> 1] = new GateUndef(j >> 1);
+        }
+      }
+      if ((!ok || !_gates[i]->getFanin().size()) && _gates[i]->getType() != PI_GATE)
+        _floats[0].push_back(i);
+
+      // float fanout
+      if (!_gates[i]->getFanout().size() && _gates[i]->getType() != PO_GATE)
+        _floats[1].push_back(i);
+    }
 
   return true;
 }
@@ -222,6 +268,14 @@ Total      162
 *********************/
 void CirMgr::printSummary() const
 {
+  cout << endl
+       << "Circuit Statistics" << endl
+       << "==================" << endl
+       << "  PI"    << setw(12) << right << MILOA[1] << endl
+       << "  PO"    << setw(12) << right << MILOA[3] << endl
+       << "  AIG"   << setw(11) << right << MILOA[4] << endl
+       << "------------------" << endl
+       << "  Total" << setw( 9) << right << MILOA[1] + MILOA[3] + MILOA[4] << endl;
 }
 
 void CirMgr::printNetlist() const
@@ -231,17 +285,33 @@ void CirMgr::printNetlist() const
 void CirMgr::printPIs() const
 {
   cout << "PIs of the circuit:";
-  cout << endl;
+  printVector(_ins);
 }
 
 void CirMgr::printPOs() const
 {
   cout << "POs of the circuit:";
-  cout << endl;
+  printVector(_outs);
 }
 
 void CirMgr::printFloatGates() const
 {
+  // output
+  if (_floats[0].size()) {
+    cout << "Gates with floating fanin(s):";
+    printVector(_floats[0]);
+  }
+  if (_floats[1].size()) {
+    cout << "Gates defined but not used  :";
+    printVector(_floats[1]);
+  }
+}
+
+void CirMgr::printVector(const vector<unsigned> &v) const
+{
+  for (const unsigned &i: v)
+    cout << " " << i;
+  cout << endl;
 }
 
 void CirMgr::writeAag(ostream& outfile) const
