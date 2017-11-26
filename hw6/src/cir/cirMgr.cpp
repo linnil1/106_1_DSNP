@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <cassert>
 #include <cstring>
+#include <sstream>
 #include "cirMgr.h"
 #include "cirGate.h"
 #include "util.h"
@@ -149,6 +150,61 @@ static bool parseError(CirParseError err)
 /**************************************************************/
 bool CirMgr::readCircuit(const string& fileName)
 {
+  // TODO without handling Errors
+  std::fstream fs(fileName);
+  if (!fs.is_open())
+    return false;
+  string s;
+
+  // MILOA
+  getline(fs, s);
+  stringstream ss(s);
+  string aag; ss >> aag;
+  for (int i=0; i<5; ++i)
+    ss >> MILOA[i];
+  // M
+  _gates.resize(MILOA[0] + MILOA[3] + 1);
+  // I
+  int nos = 2;
+  for (int i=0; i<MILOA[1]; ++i) {
+    getline(fs, s);
+    stringstream ss(s);
+    int ind;
+    ss >> ind;
+    _gates[ind >> 1] =  new GateIn(nos++);
+  }
+  // O
+  for (int i=0; i<MILOA[3]; ++i) {
+    getline(fs, s);
+    stringstream ss(s);
+    unsigned ind;
+    ss >> ind;
+    _gates[MILOA[0] + i + 1] = new GateOut(nos++);
+    _gates[MILOA[0] + i + 1]->setFanin(ind);
+  }
+  // A
+  for (int i=0; i<MILOA[4]; ++i) {
+    getline(fs, s);
+    stringstream ss(s);
+    unsigned ind, in0, in1;
+    ss >> ind >> in0 >> in1;
+    _gates[ind >> 1] = new GateAnd(nos++);
+    _gates[ind >> 1]->setFanin(in0);
+    _gates[ind >> 1]->setFanin(in1);
+  }
+  // TODO comments
+  // ...
+  fs.close();
+
+  // const
+  _gates[0] = new GateConst(0);
+  // backward
+  for (unsigned i=0; i<_gates.size(); ++i)
+    if (_gates[i])
+      for (unsigned &j:_gates[i]->getFanin())
+        if (getGate(j >> 1))
+          getGate(j >> i)->setFanout(i);
+
   return true;
 }
 

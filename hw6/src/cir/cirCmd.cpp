@@ -99,7 +99,7 @@ void CirReadCmd::usage(ostream& os) const
 void CirReadCmd::help() const
 {
   cout << setw(15) << left << "CIRRead: "
-    << "read in a circuit and construct the netlist" << endl;
+       << "read in a circuit and construct the netlist" << endl;
 }
 
 //----------------------------------------------------------------------

@@ -30,11 +30,10 @@ void CirGate::reportGate() const
 
 void CirGate::reportFanin(int level) const
 {
-   assert (level >= 0);
+  assert (level >= 0);
 }
 
 void CirGate::reportFanout(int level) const
 {
-   assert (level >= 0);
+  assert (level >= 0);
 }
-
