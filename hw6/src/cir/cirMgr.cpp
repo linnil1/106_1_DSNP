@@ -222,9 +222,11 @@ bool CirMgr::readCircuit(const string& fileName)
   // backward
   for (unsigned i=0; i<_gates.size(); ++i)
     if (_gates[i])
-      for (unsigned &j:_gates[i]->getFanin())
-        if (getGate(j >> 1))
-          getGate(j >> 1)->setFanout((i << 1) + (j & 1));
+      for (unsigned &j:_gates[i]->getFanin()) {
+        if (!getGate(j >> 1)) // add undef
+          _gates[j >> 1] = new GateUndef(j >> 1);
+        getGate(j >> 1)->setFanout((i << 1) + (j & 1));
+      }
 
   // find floating
   for (unsigned i=1; i<_gates.size(); ++i)
@@ -233,18 +235,17 @@ bool CirMgr::readCircuit(const string& fileName)
       bool ok = true;
       for (const unsigned &j:_gates[i]->getFanin()) {
         CirGate *now = getGate(j >> 1);
-        if (!now || now->getType() == UNDEF_GATE) {
-          // Undef
+        assert(now);
+        if (now->getType() == UNDEF_GATE)
           ok = false;
-          if (!now)
-            _gates[j >> 1] = new GateUndef(j >> 1);
-        }
       }
-      if ((!ok || !_gates[i]->getFanin().size()) && _gates[i]->getType() != PI_GATE)
+      if ((!ok || !_gates[i]->getFanin().size()) &&
+          _gates[i]->getType() != PI_GATE &&  _gates[i]->getType() != UNDEF_GATE)
         _floats[0].push_back(i);
 
       // float fanout
-      if (!_gates[i]->getFanout().size() && _gates[i]->getType() != PO_GATE)
+      if (!_gates[i]->getFanout().size() &&
+          _gates[i]->getType() != PO_GATE &&  _gates[i]->getType() != UNDEF_GATE)
         _floats[1].push_back(i);
     }
 
@@ -331,9 +332,16 @@ void CirMgr::printVector(const IdList &v) const
 
 void CirMgr::writeAag(ostream& outfile) const
 {
+  // search A
+  CirGate::setVisitFlag();
+  IdList v;
+  for (unsigned i=0; i<MILOA[3]; ++i)
+      findAnd(MILOA[0] + i + 1, v);
   // M
   outfile << "aag";
-  printVector(IdList(MILOA, MILOA+5));
+  IdList miloa(MILOA, MILOA+4);
+  miloa.push_back(v.size());
+  printVector(miloa);
   // I
   for (const unsigned &i: _ins)
     outfile << i * 2 << endl;
@@ -341,10 +349,6 @@ void CirMgr::writeAag(ostream& outfile) const
   for (const unsigned &i: _outs)
     cout << getGate(i)->getFanin()[0] << endl;
   // A
-  CirGate::setVisitFlag();
-  IdList v;
-  for (unsigned i=0; i<MILOA[3]; ++i)
-      findAnd(MILOA[0] + i + 1, v);
   for (const unsigned &i: v) {
     outfile << i * 2;
     printVector(getGate(i)->getFanin());

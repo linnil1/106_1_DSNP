@@ -55,7 +55,7 @@ void CirGate::goFanin (unsigned level, bool no) const {
     return ;
   cout << string(level * 2, ' ')
        << (no ? "!" : "" ) << getTypeStr() << " " << _ind;
-  if (isVisit() && _fanin.size()) {
+  if (level < _max_level && _fanin.size() && isVisit()) {
     cout << " (*)\n";
     return ;
   }
@@ -69,7 +69,7 @@ void CirGate::goFanout (unsigned level, bool no) const {
     return ;
   cout << string(level * 2, ' ')
        << (no ? "!" : "" ) << getTypeStr() << " " << _ind;
-  if (isVisit() && _fanout.size()) {
+  if (level < _max_level && _fanout.size() && isVisit()) {
     cout << " (*)\n";
     return ;
   }
