@@ -19,12 +19,12 @@
 
 using namespace std;
 
-// TODO: Implement memeber functions for class CirMgr
-
 /*******************************/
 /*   Global variable and enum  */
 /*******************************/
 CirMgr* cirMgr = 0;
+unsigned CirGate::_max_level = 0;
+unsigned CirGate::_visited_flag= 0;
 
 enum CirParseError {
   EXTRA_SPACE,
@@ -180,7 +180,7 @@ bool CirMgr::readCircuit(const string& fileName)
     stringstream ss(s);
     unsigned ind;
     ss >> ind;
-    _gates[MILOA[0] + i + 1] = new GateOut(ind >> 1, nos++);
+    _gates[MILOA[0] + i + 1] = new GateOut(MILOA[0] + i + 1, nos++);
     _gates[MILOA[0] + i + 1]->setFanin(ind);
     _outs.push_back(MILOA[0] + i + 1);
   }
@@ -207,9 +207,6 @@ bool CirMgr::readCircuit(const string& fileName)
     ss >> s >> name;
     int ind;
     myStr2Int(string(s.begin()+1, s.end()), ind);
-    cout << s    << endl;
-    cout << ind  << endl;
-    cout << name << endl;
     if (s[0] == 'i')
       _gates[_ins[ind]]->setName(name);
     else if (s[0] == 'o')
@@ -280,6 +277,24 @@ void CirMgr::printSummary() const
 
 void CirMgr::printNetlist() const
 {
+  CirGate::setVisitFlag();
+  cout << endl;
+  unsigned num = 0;
+  for (unsigned i=0; i<MILOA[3]; ++i)
+      goNetlist(MILOA[0] + i + 1, num);
+}
+
+void CirMgr::goNetlist(unsigned id, unsigned& num) const
+{
+  CirGate *gate = getGate(id);
+  assert(gate);
+  if (gate->getType() == UNDEF_GATE || gate->isVisit())
+    return ;
+  for (const unsigned &i: gate->getFanin())
+    goNetlist(i >> 1, num);
+  cout << "[" << num++ << "] ";
+  gate->printGate();
+  cout << endl;
 }
 
 void CirMgr::printPIs() const
@@ -307,7 +322,7 @@ void CirMgr::printFloatGates() const
   }
 }
 
-void CirMgr::printVector(const vector<unsigned> &v) const
+void CirMgr::printVector(const IdList &v) const
 {
   for (const unsigned &i: v)
     cout << " " << i;
@@ -316,4 +331,47 @@ void CirMgr::printVector(const vector<unsigned> &v) const
 
 void CirMgr::writeAag(ostream& outfile) const
 {
+  // M
+  outfile << "aag";
+  printVector(IdList(MILOA, MILOA+5));
+  // I
+  for (const unsigned &i: _ins)
+    outfile << i * 2 << endl;
+  // O
+  for (const unsigned &i: _outs)
+    cout << getGate(i)->getFanin()[0] << endl;
+  // A
+  CirGate::setVisitFlag();
+  IdList v;
+  for (unsigned i=0; i<MILOA[3]; ++i)
+      findAnd(MILOA[0] + i + 1, v);
+  for (const unsigned &i: v) {
+    outfile << i * 2;
+    printVector(getGate(i)->getFanin());
+  }
+  // symbols
+  for (unsigned i=0; i<_ins.size(); ++i) {
+    CirGate *gate = getGate(_ins[i]);
+    if (gate->getName().size())
+      outfile << 'i' << i << " " << gate->getName() << endl;
+  }
+  for (unsigned i=0; i<_outs.size(); ++i) {
+    CirGate *gate = getGate(_outs[i]);
+    if (gate->getName().size())
+      outfile << 'o' << i << " " << gate->getName() << endl;
+  }
+  // comments. Use default for easier debugging
+  outfile << "c\nAAG output by Chung-Yang (Ric) Huang\n";
+}
+
+void CirMgr::findAnd(unsigned id, IdList& v) const
+{
+  CirGate *gate = getGate(id);
+  assert(gate);
+  if (gate->getType() == UNDEF_GATE || gate->isVisit())
+    return ;
+  for (const unsigned &i: gate->getFanin())
+    findAnd(i >> 1, v);
+  if (gate->getType() == AIG_GATE)
+    v.push_back(id);
 }

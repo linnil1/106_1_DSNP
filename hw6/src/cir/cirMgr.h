@@ -9,7 +9,6 @@
 #ifndef CIR_MGR_H
 #define CIR_MGR_H
 
-#include <vector>
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -21,11 +20,10 @@ using namespace std;
 
 extern CirMgr *cirMgr;
 
-// TODO: Define your own data members and member functions
 class CirMgr
 {
 public:
-  CirMgr(){}
+  CirMgr() {}
   ~CirMgr() {}
 
   // Access functions
@@ -44,11 +42,13 @@ public:
   void writeAag(ostream&) const;
 
 private:
-  void printVector(const vector<unsigned> &v) const;
-  vector<CirGate*> _gates;
+  void printVector(const IdList &v) const;
+  void goNetlist(unsigned, unsigned&) const;
+  void findAnd(unsigned, IdList&) const;
+  GateList _gates;
   unsigned MILOA[5];
-  vector<unsigned> _ins, _outs;
-  vector<unsigned> _floats[2];
+  IdList _ins, _outs,
+         _floats[2];
   stringstream _comments;
 };
 

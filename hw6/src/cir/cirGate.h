@@ -21,12 +21,11 @@ class CirGate;
 //------------------------------------------------------------------------
 //   Define classes
 //------------------------------------------------------------------------
-// TODO: Define your own data members and member functions, or classes
 class CirGate
 {
 public:
-  CirGate(int type=0, unsigned lineNo=0, unsigned ind=0):
-    _type(type), _line_no(lineNo), _ind(ind) {};
+  CirGate(int type=0, unsigned ind=0, unsigned lineNo=0):
+    _type(type), _line_no(lineNo), _visited(0), _ind(ind) {};
   virtual ~CirGate() {}
 
   // Basic access methods
@@ -40,6 +39,7 @@ public:
   void reportFanin (int level) const;
   void reportFanout(int level) const;
 
+  // names for pi po
   virtual string getName() const { return ""; }
   virtual void setName(string &s) {}
 
@@ -49,22 +49,34 @@ public:
   vector<unsigned> getFanin () const { return _fanin ; }
   vector<unsigned> getFanout() const { return _fanout; }
 
+  // visit
+  bool isVisit() const;
+  static void setVisitFlag() { ++_visited_flag; }
+
 private:
   int _type;
   unsigned _line_no;
-  int _ind;
+
+  // visit
+  mutable unsigned _visited;
+  static unsigned _max_level;
+  static unsigned _visited_flag;
 
 protected:
+  int _ind;
+  string netPrint(const unsigned&) const;
   vector<unsigned> _fanin;
   vector<unsigned> _fanout;
 
+  void goFanin (unsigned ,bool) const;
+  void goFanout(unsigned ,bool) const;
 };
 
 class GateUndef: public CirGate
 {
 public:
   GateUndef(unsigned ind):
-    CirGate(UNDEF_GATE, 0, ind) {};
+    CirGate(UNDEF_GATE, ind, 0) {};
   ~GateUndef() {};
   void printGate() const {};
 };
@@ -75,16 +87,22 @@ public:
   GateConst():
     CirGate(CONST_GATE, 0, 0) {};
   ~GateConst() {};
-  void printGate() const {};
+  void printGate() const {
+    cout << "CONST0";
+  };
 };
 
 class GateIn: public CirGate
 {
 public:
   GateIn(unsigned ind, unsigned lineNo=0):
-    CirGate(PI_GATE, lineNo, ind) {};
+    CirGate(PI_GATE, ind, lineNo) {};
   ~GateIn() {};
-  void printGate() const {};
+  void printGate() const {
+    cout << setw(4) << left << getTypeStr() << _ind;
+    if (_name.size())
+      cout << " (" << _name << ")";
+  };
   string getName() const { return _name; }
   void setName(string &s) { _name = s; }
 
@@ -96,9 +114,15 @@ class GateOut: public CirGate
 {
 public:
   GateOut(unsigned ind, unsigned lineNo=0):
-    CirGate(PO_GATE, lineNo, ind) {};
+    CirGate(PO_GATE, ind, lineNo) {};
   ~GateOut() {};
-  void printGate() const {};
+  void printGate() const {
+    cout << setw(4) << left << getTypeStr() << _ind;
+    for (const unsigned &i: _fanin)
+      cout << " " << netPrint(i);
+    if (_name.size())
+      cout << " (" << _name << ")";
+  };
   string getName() const { return _name; }
   void setName(string &s) { _name = s; }
 
@@ -110,9 +134,13 @@ class GateAnd: public CirGate
 {
 public:
   GateAnd(unsigned ind, unsigned lineNo=0):
-    CirGate(AIG_GATE, lineNo, ind) {};
+    CirGate(AIG_GATE, ind, lineNo) {};
   ~GateAnd() {};
-  void printGate() const {};
+  void printGate() const {
+    cout << setw(4) << left << getTypeStr() << _ind;
+    for (const unsigned &i: _fanin)
+      cout << " " << netPrint(i);
+  };
 };
 
 #endif // CIR_GATE_H

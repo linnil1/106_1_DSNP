@@ -19,8 +19,6 @@ using namespace std;
 
 extern CirMgr *cirMgr;
 
-// TODO: Implement memeber functions for class(es) in cirGate.h
-
 /**************************************/
 /*   class CirGate member functions   */
 /**************************************/
@@ -39,11 +37,45 @@ void CirGate::reportGate() const
 void CirGate::reportFanin(int level) const
 {
   assert (level >= 0);
+  setVisitFlag();
+  _max_level = unsigned(level);
+  goFanin(0, 0);
 }
 
 void CirGate::reportFanout(int level) const
 {
   assert (level >= 0);
+  setVisitFlag();
+  _max_level = unsigned(level);
+  goFanout(0, 0);
+}
+
+void CirGate::goFanin (unsigned level, bool no) const {
+  if (level > _max_level)
+    return ;
+  cout << string(level * 2, ' ')
+       << (no ? "!" : "" ) << getTypeStr() << " " << _ind;
+  if (isVisit() && _fanin.size()) {
+    cout << " (*)\n";
+    return ;
+  }
+  cout << endl;
+  for (const unsigned& i: _fanin)
+    cirMgr->getGate(i >> 1)->goFanin(level + 1, i & 1);
+}
+
+void CirGate::goFanout (unsigned level, bool no) const {
+  if (level > _max_level)
+    return ;
+  cout << string(level * 2, ' ')
+       << (no ? "!" : "" ) << getTypeStr() << " " << _ind;
+  if (isVisit() && _fanout.size()) {
+    cout << " (*)\n";
+    return ;
+  }
+  cout << endl;
+  for (const unsigned& i: _fanout)
+    cirMgr->getGate(i >> 1)->goFanout(level + 1, i & 1);
 }
 
 string CirGate::getTypeStr() const
@@ -62,4 +94,20 @@ string CirGate::getTypeStr() const
     default:
       return "";
   }
+}
+
+string CirGate::netPrint(const unsigned &gid) const
+{
+  CirGate *gate = cirMgr->getGate(gid >> 1);
+  return string((gate && gate->getType() != UNDEF_GATE) ? "" : "*") +
+         ((gid & 1) ? "!" : "") +
+         to_string(gid >> 1);
+}
+
+bool CirGate::isVisit() const
+{
+  if (_visited_flag == _visited)
+    return true;
+  _visited = _visited_flag;
+  return false;
 }
