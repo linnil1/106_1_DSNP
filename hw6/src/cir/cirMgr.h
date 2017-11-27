@@ -24,7 +24,11 @@ class CirMgr
 {
 public:
   CirMgr() {}
-  ~CirMgr() {}
+  ~CirMgr() {
+    for (unsigned i=0; i<_gates.size(); ++i)
+      if (_gates[i])
+        delete _gates[i];
+  }
 
   // Access functions
   // return '0' if "gid" corresponds to an undefined gate.
@@ -40,6 +44,7 @@ public:
   void printPOs() const;
   void printFloatGates() const;
   void writeAag(ostream&) const;
+  unsigned getSize() const { return MILOA[0]; }
 
 private:
   void printVector(const IdList &v) const;

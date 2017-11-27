@@ -45,6 +45,7 @@ enum CirParseError {
   REDEF_CONST,
   NUM_TOO_SMALL,
   NUM_TOO_BIG,
+  CANNOT_OPEN,
 
   DUMMY_END
 };
@@ -140,6 +141,10 @@ static bool parseError(CirParseError err)
       cerr << "[ERROR] Line " << lineNo+1 << ": " << errMsg
            << " is too big (" << errInt << ")!!" << endl;
       break;
+    case CANNOT_OPEN:
+      cerr << "Cannot open design \"" << errMsg
+           << "\"!!" << endl;
+      break;
     default: break;
   }
   return false;
@@ -148,76 +153,260 @@ static bool parseError(CirParseError err)
 /**************************************************************/
 /*   class CirMgr member functions for circuit construction   */
 /**************************************************************/
+
+void hasSpace(fstream &fs, string& s, string err)
+{
+  ++lineNo;
+  if (!getline(fs, s)) {
+    errMsg = err;
+    throw MISSING_DEF;
+  }
+
+  bool extra_space = true;
+  for (colNo=0; colNo<s.size(); ++colNo)
+    if (s[colNo] == ' ') {
+      if (extra_space)
+        throw EXTRA_SPACE;
+      extra_space = true;
+    }
+    else if(!isprint(s[colNo])) {
+      errInt = int(s[colNo]);
+      throw ILLEGAL_WSPACE;
+    }
+    else
+      extra_space = false;
+  if (extra_space) {
+    if (colNo == 0) {
+      errMsg = err;
+      colNo = 0;
+      throw MISSING_DEF;
+    }
+    else {
+      --colNo;
+      throw EXTRA_SPACE;
+    }
+  }
+  colNo = 1;
+}
+
+void isnotUnsigned(stringstream &ss, unsigned& tar)
+{
+  string s;
+  unsigned len = ss.str().size();
+  ss >> s;
+  if (ss.fail()) {
+    ss.clear();
+    errMsg = "number of variables";
+    throw MISSING_NUM;
+  }
+  int k;
+  if (!myStr2Int(s, k) || k < 0) {
+    errMsg = s;
+    throw ILLEGAL_NUM;
+  }
+  colNo += len - ss.str().size();
+  tar = unsigned(k);
+}
+
+void isnotGate(stringstream &ss, unsigned& tar, bool checkExist=true)
+{
+  isnotUnsigned(ss, tar);
+  errInt = tar;
+  if ((tar >> 1) > cirMgr->getSize())
+    throw MAX_LIT_ID;
+  if (checkExist && cirMgr->getGate(tar >> 1)) {
+    errGate = cirMgr->getGate(tar >> 1);
+    throw REDEF_GATE;
+  }
+}
+
+void hasMore(stringstream &ss)
+{
+  ss.peek();
+  if (!ss.eof())
+    throw MISSING_NEWLINE;
+}
+
 bool CirMgr::readCircuit(const string& fileName)
 {
-  // TODO without handling Errors
-  std::fstream fs(fileName);
-  if (!fs.is_open())
-    return false;
-  string s;
-
-  // MILOA
-  getline(fs, s);
-  stringstream ss(s);
-  string aag; ss >> aag;
-  for (int i=0; i<5; ++i)
-    ss >> MILOA[i];
-  // M
-  _gates.resize(MILOA[0] + MILOA[3] + 1);
-  // I
-  int nos = 2;
-  for (unsigned i=0; i<MILOA[1]; ++i) {
-    getline(fs, s);
-    stringstream ss(s);
-    int ind;
-    ss >> ind;
-    _gates[ind >> 1] =  new GateIn(ind >> 1, nos++);
-    _ins.push_back(ind >> 1);
-  }
-  // O
-  for (unsigned i=0; i<MILOA[3]; ++i) {
-    getline(fs, s);
-    stringstream ss(s);
-    unsigned ind;
-    ss >> ind;
-    _gates[MILOA[0] + i + 1] = new GateOut(MILOA[0] + i + 1, nos++);
-    _gates[MILOA[0] + i + 1]->setFanin(ind);
-    _outs.push_back(MILOA[0] + i + 1);
-  }
-  // A
-  for (unsigned i=0; i<MILOA[4]; ++i) {
-    getline(fs, s);
-    stringstream ss(s);
-    unsigned ind, in0, in1;
-    ss >> ind >> in0 >> in1;
-    _gates[ind >> 1] = new GateAnd(ind >> 1, nos++);
-    _gates[ind >> 1]->setFanin(in0);
-    _gates[ind >> 1]->setFanin(in1);
-  }
-
-  // comments and symbols
-  while (getline(fs, s)) {
-    // comments
-    if (s == "c") {
-      _comments << fs.rdbuf();
-      break;
+  try {
+    // read file
+    std::fstream fs(fileName);
+    if (!fs.is_open()) {
+      errMsg = fileName;
+      throw CANNOT_OPEN;
     }
-    stringstream ss(s);
-    string name;
-    ss >> s >> name;
-    int ind;
-    myStr2Int(string(s.begin()+1, s.end()), ind);
-    if (s[0] == 'i')
-      _gates[_ins[ind]]->setName(name);
-    else if (s[0] == 'o')
-      _gates[_outs[ind]]->setName(name);
-    else
-      cerr << "ERROR\n";
-  }
-  fs.close();
+    lineNo = -1;
+    string s;
 
-  // const
-  _gates[0] = new GateConst();
+    // MILOA
+    // head -- check space
+    hasSpace(fs, s, "aag");
+    stringstream ss(s);
+    // head -- check aag
+    string aag; ss >> aag;
+    if (aag != "aag") {
+      errMsg = aag;
+      throw ILLEGAL_IDENTIFIER;
+    }
+    // head -- check M I L O A
+    colNo = 4;
+    for (int i=0; i<5; ++i)
+      isnotUnsigned(ss, MILOA[i]);
+    hasMore(ss);
+
+    // M
+    // M -- latches
+    if (MILOA[2] > 0) {
+      errMsg = "latches";
+      throw ILLEGAL_NUM;
+    }
+    // M -- too small
+    if (MILOA[0] < MILOA[1] + MILOA[4]) {
+      errInt = MILOA[0];
+      errMsg = "Number of variables";
+      throw NUM_TOO_SMALL;
+    }
+    // M resize
+    _gates.resize(MILOA[0] + MILOA[3] + 1);
+    // const
+    _gates[0] = new GateConst();
+
+    // I
+    for (unsigned i=0; i<MILOA[1]; ++i) {
+      // I -- read
+      hasSpace(fs, s, "PI");
+      stringstream ss(s);
+      unsigned ind;
+      // I -- checkGate
+      isnotGate(ss, ind);
+      if (ind & 1) {
+        errInt = ind;
+        errMsg = "PI";
+        throw CANNOT_INVERTED;
+      }
+      hasMore(ss);
+      // I add PI
+      _gates[ind >> 1] =  new GateIn(ind >> 1, lineNo);
+      _ins.push_back(ind >> 1);
+    }
+    // O
+    for (unsigned i=0; i<MILOA[3]; ++i) {
+      // O -- read
+      hasSpace(fs, s, "PO");
+      stringstream ss(s);
+      // O -- check fanin
+      unsigned ind;
+      isnotGate(ss, ind, false);
+      hasMore(ss);
+      // O add PO
+      _gates[MILOA[0] + i + 1] = new GateOut(MILOA[0] + i + 1, lineNo);
+      _gates[MILOA[0] + i + 1]->setFanin(ind);
+      _outs.push_back(MILOA[0] + i + 1);
+    }
+    // A
+    for (unsigned i=0; i<MILOA[4]; ++i) {
+      // A -- read
+      hasSpace(fs, s, "AIG");
+      stringstream ss(s);
+      // A -- cehck fanin
+      unsigned ind, in0, in1;
+      isnotGate(ss, ind);
+      isnotGate(ss, in0, false);
+      isnotGate(ss, in1, false);
+      hasMore(ss);
+      // A add AIG
+      _gates[ind >> 1] = new GateAnd(ind >> 1, lineNo);
+      _gates[ind >> 1]->setFanin(in0);
+      _gates[ind >> 1]->setFanin(in1);
+    }
+
+    // comments and symbols
+    // Note symbols name can have spaces in it
+    IdList* sym;
+    while (getline(fs, s)) {
+      ++lineNo;
+      if (!s.size()) {
+        errMsg = "symbols";
+        throw MISSING_DEF;
+      }
+      // first word
+      colNo = 0;
+      if (s[0] == 'c') {
+        // comments
+        if (s.size() > 1) {
+          colNo = 1;
+          throw MISSING_NEWLINE;
+        }
+        _comments << fs.rdbuf();
+        break;
+      }
+      // in or out or error
+      else if (s[0] == 'i')
+        sym = &_ins;
+      else if (s[0] == 'o')
+        sym = &_outs;
+      else if (s[0] == ' ')
+        throw EXTRA_SPACE;
+      else if (!isprint(s[0])) {
+        errInt = unsigned(s[0]);
+        throw ILLEGAL_WSPACE;
+      }
+      else {
+        errMsg = s[0];
+        throw ILLEGAL_SYMBOL_TYPE;
+      }
+
+      // symbols -- index read
+      ++colNo;
+      size_t found = s.find(' ', 1);
+      if (found == string::npos)
+        found = s.end() - s.begin();
+      string sind = string(s.begin() + 1, s.begin() + found);
+      int ind;
+      // symbols -- index check
+      if (!myStr2Int(sind, ind) || ind < 0) {
+        errMsg = "symbol index(" + sind + ")";
+        throw ILLEGAL_NUM;
+      }
+      // symbols -- index size
+      if (ind >= sym->size()) {
+        errInt = ind;
+        errMsg = "PI index";
+        throw NUM_TOO_BIG;
+      }
+
+      // symbols -- name
+      colNo = found + 1;
+      if (colNo >= s.size()) {
+        errMsg = "symbolic name";
+        throw MISSING_IDENTIFIER;
+      }
+      string name = string(s.begin() + colNo, s.end());
+      // symbols -- name check
+      for (char &i: name)
+        if (!isprint(i)) {
+          errInt = unsigned(i);
+          throw ILLEGAL_SYMBOL_NAME;
+        }
+      // symbols -- rename
+      CirGate *gate = _gates[(*sym)[ind]];
+      if (gate->getName().size()) {
+        errMsg = s[0];
+        errInt = ind;
+        throw REDEF_SYMBOLIC_NAME;
+      }
+      // symbols add name
+      gate->setName(name);
+      fs.peek();
+    }
+    fs.close();
+  }
+  catch(CirParseError err) {
+    parseError(err);
+    return false;
+  };
+
 
   // backward
   for (unsigned i=0; i<_gates.size(); ++i)

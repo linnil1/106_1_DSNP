@@ -25,7 +25,7 @@ class CirGate
 {
 public:
   CirGate(int type=0, unsigned ind=0, unsigned lineNo=0):
-    _type(type), _line_no(lineNo), _visited(0), _ind(ind) {};
+    _type(type), _line_no(lineNo + 1), _visited(0), _ind(ind) {};
   virtual ~CirGate() {}
 
   // Basic access methods
@@ -76,7 +76,7 @@ class GateUndef: public CirGate
 {
 public:
   GateUndef(unsigned ind):
-    CirGate(UNDEF_GATE, ind, 0) {};
+    CirGate(UNDEF_GATE, ind, -1) {};
   ~GateUndef() {};
   void printGate() const {};
 };
@@ -85,7 +85,7 @@ class GateConst: public CirGate
 {
 public:
   GateConst():
-    CirGate(CONST_GATE, 0, 0) {};
+    CirGate(CONST_GATE, 0, -1) {};
   ~GateConst() {};
   void printGate() const {
     cout << "CONST0";
