@@ -110,14 +110,28 @@ public:
   // if yes, return true;
   // else return false;
   bool check(const Data& d) const { return false; }
-  // query if d is in the hash...
-  // if yes, replace d with the data in the hash and return true;
-  // else return false;
-  bool query(Data& d) const { return false; }
   // update the entry in hash that is equal to d (i.e. == return true)
   // if found, update that entry with d and return true;
   // else insert d into hash as a new entry and return false;
-  bool update(const Data& d) { return false; }
+
+  bool query(Data& d) const {
+    vector<Data> &v = _buckets[bucketNum(d)];
+    typename vector<Data>::iterator it = find(v.begin(), v.end(), d);
+    if (it != v.end())
+      d = *it;
+    return it != v.end();
+  }
+  bool update(const Data& d) {
+    vector<Data> &v = _buckets[bucketNum(d)];
+    typename vector<Data>::iterator it = find(v.begin(), v.end(), d);
+    if (it != v.end())
+      *it = d;
+    return it != v.end();
+  }
+
+  // query if d is in the hash...
+  // if yes, replace d with the data in the hash and return true;
+  // else return false;
 
   // return true if inserted successfully (i.e. d is not in the hash)
   // return false is d is already in the hash ==> will not insert

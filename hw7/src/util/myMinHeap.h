@@ -12,6 +12,9 @@
 #include <algorithm>
 #include <vector>
 
+#define getParent(i) (((i + 1) >> 1) - 1)
+#define getChild(i)  (((i + 1) << 1) - 1)
+
 template <class Data>
 class MinHeap
 {
@@ -28,11 +31,38 @@ public:
 
   size_t size() const { return _data.size(); }
 
-  // TODO
-  const Data& min() const { return Data(); }
-  void insert(const Data& d) { }
-  void delMin() { }
-  void delData(size_t i) { }
+  const Data& min() const { return _data.front(); }
+  void insert(const Data& d) {
+    size_t i = size();
+    _data.push_back(d);
+    // flow up
+    while (i && _data[i] < _data[getParent(i)]) {
+      swap(_data[i], _data[getParent(i)]);
+      i = getParent(i);
+    }
+  }
+  void delMin() { delData(0); }
+  void delData(size_t i) {
+    assert(size() > 0);
+    swap(_data[i], _data[size() - 1]);
+    _data.pop_back();
+
+    // flow up
+    while (i && _data[i] < _data[getParent(i)]) {
+      swap(_data[i], _data[getParent(i)]);
+      i = getParent(i);
+    }
+    // sink down
+    while (getChild(i) < size()) {
+      size_t small = getChild(i);
+      if (small + 1 < size() && _data[small + 1] < _data[small])
+        ++small;
+      if (_data[i] < _data[small])
+        break;
+      swap(_data[i], _data[small]);
+      i = small;
+    }
+  }
 
 private:
   // DO NOT add or change data members
