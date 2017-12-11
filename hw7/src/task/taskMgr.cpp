@@ -80,15 +80,19 @@ bool TaskMgr::remove(const string& s)
 //       i.e. TaskNode newNode;
 void TaskMgr::add(size_t nMachines)
 {
-  // TODO...
+  for (size_t i=0; i<nMachines; ++i) {
+    TaskNode d;
+    for(; !_taskHash.insert(d); d=TaskNode());
+    cout << "Task node inserted: (" << d.getName() << ", " << d.getLoad() << ")\n";
+  }
 }
 
 // return true if TaskNode is successfully inserted
 // return false if equivalent node has already existed
 bool TaskMgr::add(const string& s, size_t l)
 {
-  // TODO...
-  return false;
+  cout << "Task node inserted: (" << s << ", " << l << ")\n";
+  return _taskHash.insert(TaskNode(s, l));
 }
 
 // Assign the min task node with 'l' extra load.
