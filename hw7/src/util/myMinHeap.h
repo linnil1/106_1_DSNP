@@ -57,7 +57,7 @@ public:
       size_t small = getChild(i);
       if (small + 1 < size() && _data[small + 1] < _data[small])
         ++small;
-      if (_data[i] < _data[small])
+      if (!(_data[small] < _data[i]))
         break;
       swap(_data[i], _data[small]);
       i = small;

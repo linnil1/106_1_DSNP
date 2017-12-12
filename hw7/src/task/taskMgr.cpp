@@ -93,10 +93,10 @@ void TaskMgr::add(size_t nMachines)
 bool TaskMgr::add(const string& s, size_t l)
 {
   TaskNode d = TaskNode(s, l);
-  cout << "Task node inserted: (" << d.getName() << ", " << d.getLoad() << ")\n";
   if (!_taskHash.insert(d))
     return false;
   _taskHeap.insert(d);
+  cout << "Task node inserted: (" << d.getName() << ", " << d.getLoad() << ")\n";
   return true;
 }
 

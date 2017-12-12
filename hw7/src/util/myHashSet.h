@@ -106,38 +106,43 @@ public:
   bool empty() const { return true; }
   // number of valid data
   size_t size() const { size_t s = 0; return s; }
+
+#define findIt() \
+  vector<Data> &v = _buckets[bucketNum(d)]; \
+  typename vector<Data>::iterator it = find(v.begin(), v.end(), d);
+
   // check if d is in the hash...
   // if yes, return true;
   // else return false;
-  bool check(const Data& d) const { return false; }
-  // update the entry in hash that is equal to d (i.e. == return true)
-  // if found, update that entry with d and return true;
-  // else insert d into hash as a new entry and return false;
-
-  bool query(Data& d) const {
-    vector<Data> &v = _buckets[bucketNum(d)];
-    typename vector<Data>::iterator it = find(v.begin(), v.end(), d);
-    if (it != v.end())
-      d = *it;
-    return it != v.end();
-  }
-  bool update(const Data& d) {
-    vector<Data> &v = _buckets[bucketNum(d)];
-    typename vector<Data>::iterator it = find(v.begin(), v.end(), d);
-    if (it != v.end())
-      *it = d;
+  bool check(const Data& d) const {
+    findIt();
     return it != v.end();
   }
 
   // query if d is in the hash...
   // if yes, replace d with the data in the hash and return true;
   // else return false;
+  bool query(Data& d) const {
+    findIt();
+    if (it != v.end())
+      d = *it;
+    return it != v.end();
+  }
+
+  // update the entry in hash that is equal to d (i.e. == return true)
+  // if found, update that entry with d and return true;
+  // else insert d into hash as a new entry and return false;
+  bool update(const Data& d) {
+    findIt();
+    if (it != v.end())
+      *it = d;
+    return it != v.end();
+  }
 
   // return true if inserted successfully (i.e. d is not in the hash)
   // return false is d is already in the hash ==> will not insert
   bool insert(const Data& d) {
-    vector<Data> &v = _buckets[bucketNum(d)];
-    typename vector<Data>::iterator it = find(v.begin(), v.end(), d);
+    findIt();
     if (it != v.end())
       return false;
     v.push_back(d);
@@ -147,8 +152,7 @@ public:
   // return true if removed successfully (i.e. d is in the hash)
   // return fasle otherwise (i.e. nothing is removed)
   bool remove(const Data& d) {
-    vector<Data> &v = _buckets[bucketNum(d)];
-    typename vector<Data>::iterator it = find(v.begin(), v.end(), d);
+    findIt();
     if (it == v.end())
       return false;
     v.erase(it);
