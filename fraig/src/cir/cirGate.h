@@ -31,6 +31,7 @@ public:
 
   // Basic access methods
   int getType() const { return _type; }
+  bool isAig() const { return _type == AIG_GATE; }
   string getTypeStr() const;
   unsigned getLineNo() const { return _line_no; }
 
@@ -53,9 +54,7 @@ public:
   static void setVisitFlag() { ++_visited_flag; }
   void netPrint() const;
 
-  // no used
-  // virtual bool isAig() const { return false; }
-  // virtual void printGate() const {}
+  // virtual void printGate() const {} // no used
 private:
   int _type;
   unsigned _line_no;
