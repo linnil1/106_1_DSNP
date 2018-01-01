@@ -25,7 +25,7 @@ using namespace std;
 CirMgr* cirMgr = 0;
 unsigned CirGate::_max_level = 0;
 unsigned CirGate::_visited_flag= 0;
-unsigned GateAnd::num = 0;
+unsigned GateAnd::_num = 0;
 
 enum CirParseError {
   EXTRA_SPACE,
@@ -296,7 +296,7 @@ bool CirMgr::readCircuit(const string& fileName)
       hasMore(ss);
       // O add PO
       _gates[MILOA[0] + i + 1] = new GateOut(MILOA[0] + i + 1, lineNo);
-      static_cast<GateOut*>(_gates[MILOA[0] + i + 1])->setFanin(ind);
+      static_cast<GateOut*>(_gates[MILOA[0] + i + 1])->setFanin(&ind);
       _outs.push_back(MILOA[0] + i + 1);
     }
     // A
@@ -305,14 +305,14 @@ bool CirMgr::readCircuit(const string& fileName)
       hasSpace(fs, s, "AIG");
       stringstream ss(s);
       // A -- cehck fanin
-      unsigned ind, in0, in1;
+      unsigned ind, in[2];
       isnotGate(ss, ind);
-      isnotGate(ss, in0, false);
-      isnotGate(ss, in1, false);
+      isnotGate(ss, in[0], false);
+      isnotGate(ss, in[1], false);
       hasMore(ss);
       // A add AIG
       _gates[ind >> 1] = new GateAnd(ind >> 1, lineNo);
-      static_cast<GateAnd*>(_gates[ind >> 1])->setFanin(in0, in1);
+      static_cast<GateAnd*>(_gates[ind >> 1])->setFanin(in);
     }
 
     // comments and symbols
@@ -364,7 +364,7 @@ bool CirMgr::readCircuit(const string& fileName)
         throw ILLEGAL_NUM;
       }
       // symbols -- index size
-      if (ind >= sym->size()) {
+      if (unsigned(ind) >= sym->size()) {
         errInt = ind;
         errMsg = "PI index";
         throw NUM_TOO_BIG;
@@ -524,7 +524,7 @@ void CirMgr::writeAag(ostream& outfile) const
   CirGate::setVisitFlag();
   IdList v;
   for (unsigned i=0; i<MILOA[3]; ++i)
-      findAnd(MILOA[0] + i + 1, v);
+      goFindAnd(MILOA[0] + i + 1, v);
   // M
   outfile << "aag";
   IdList miloa(MILOA, MILOA+4);
@@ -557,14 +557,14 @@ void CirMgr::writeAag(ostream& outfile) const
   outfile << "c\nAAG output by Chung-Yang (Ric) Huang\n";
 }
 
-void CirMgr::findAnd(unsigned id, IdList& v) const
+void CirMgr::goFindAnd(unsigned id, IdList& v) const
 {
   CirGate *gate = getGate(id);
   assert(gate);
   if (gate->getType() == UNDEF_GATE || gate->isVisit())
     return ;
   for (unsigned i=0; i<gate->fanInSize(); ++i)
-    findAnd(gate->getFanin()[i] >> 1, v);
+    goFindAnd(gate->getFanin()[i] >> 1, v);
   if (gate->getType() == AIG_GATE)
     v.push_back(id);
 }

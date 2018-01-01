@@ -38,6 +38,11 @@ public:
   // Access functions
   // return '0' if "gid" corresponds to an undefined gate.
   CirGate* getGate(ID gid) const { return _gates[gid]; }
+  void delGate(ID& gid) {
+    takeOutChild(getGate(gid), gid); // Need make sure
+    delete _gates[gid];
+    _gates[gid] = NULL;
+  }
 
   // Member functions about circuit construction
   bool readCircuit(const string&);
@@ -85,15 +90,15 @@ private:
   void goNetlist(unsigned, unsigned&) const;
   void goSweep(ID);
   void goOptimize(ID);
-  void findAnd(unsigned, IdList&) const;
+  void goFindAnd(unsigned, IdList&) const;
 
   // var
-  GateList _gates;
-  unsigned MILOA[5];
-  IdList _ins, _outs,
-         _floats[2];
+  GateList     _gates;
+  unsigned     MILOA[5];
+  IdList       _ins, _outs,
+               _floats[2];
   stringstream _comments;
-  ofstream           *_simLog;
+  ofstream     *_simLog;
 };
 
 #endif // CIR_MGR_H

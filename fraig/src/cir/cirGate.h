@@ -13,10 +13,14 @@
 #include <iostream>
 #include "cirDef.h"
 #include "sat.h"
+
 using namespace std;
+
 class CirGate;
 
-static IdSet null_idset;
+const static IdSet null_idset;
+const static string null_str;
+
 //------------------------------------------------------------------------
 //   Define classes
 //------------------------------------------------------------------------
@@ -37,6 +41,7 @@ public:
   void reportGate() const;
   void reportFanin (int level) const;
   void reportFanout(int level) const;
+  void netPrint() const;
 
   // fanin fanout
   virtual unsigned fanInSize() const { return 0; }
@@ -44,29 +49,29 @@ public:
   virtual const IdSet& getFanout() const { return null_idset; }
   virtual unsigned fanOutSize() const { return 0; }
 
-  // names for pi po
-  virtual string getName() const { return ""; }
-  virtual void setName(string &s) {}
-
   // visit
   bool isVisit() const;
   static void setVisitFlag() { ++_visited_flag; }
-  void netPrint() const;
   static void resetVis() { _max_level = _visited_flag = 0; }
+
+  // name
+  virtual const string& getName() const { return null_str; }
+  virtual void setName(string &s) {}
 
   // virtual void printGate() const {} // no used
 private:
-  int _type;
-  unsigned _line_no;
+  int              _type;
+  unsigned         _line_no;
 
   // visit
   mutable unsigned _visited;
-  static unsigned _max_level;
-  static unsigned _visited_flag;
+  static unsigned  _max_level;
+  static unsigned  _visited_flag;
 
 protected:
-  ID _ind;
+  ID               _ind;
 
+  // report gate by dfs
   void goFanin (ID, bool) const;
   void goFanout(ID, bool) const;
 };
@@ -86,6 +91,36 @@ private:
   IdSet _fanout;
 };
 
+class CirGateName
+{
+public:
+  CirGateName() {};
+  ~CirGateName() {};
+  const string& getName() const { return _name; }
+  void setName(string &s) { _name = s; }
+private:
+  string _name;
+};
+
+class CirGateIn
+{
+public:
+  CirGateIn() {};
+  ~CirGateIn() {};
+  void setFanin (ID* num) {
+    for (unsigned i=0; i<fanInSize(); ++i)
+      const_cast<ID*>(getFanin())[i] = num[i];
+  }
+  void updateFanin(ID from, ID to) {
+    for (unsigned i=0; i<fanInSize(); ++i)
+      if ((getFanin()[i] ^ from) <= 1)
+        const_cast<ID*>(getFanin())[i] = to ^ (getFanin()[i] & 1);
+  }
+  virtual unsigned fanInSize() const = 0;
+  virtual const ID* getFanin() const = 0;
+};
+
+// Five type of AIG
 class GateUndef: public CirGateOut
 {
 public:
@@ -102,67 +137,52 @@ public:
   ~GateConst() {};
 };
 
-class GateIn: public CirGateOut
+class GateIn: public CirGateOut, public CirGateName
 {
 public:
   GateIn(ID ind, unsigned lineNo=0):
     CirGateOut(PI_GATE, ind, lineNo) {};
   ~GateIn() {};
-  string getName() const { return _name; }
-  void setName(string &s) { _name = s; }
-
-private:
-  string _name;
+  // name
+  const string& getName() const { return CirGateName::getName(); }
+  void setName(string &s) { CirGateName::setName(s); }
 };
 
-class GateOut: public CirGate
+class GateOut: public CirGate, public CirGateName, public CirGateIn
 {
 public:
   GateOut(ID ind, unsigned lineNo=0):
     CirGate(PO_GATE, ind, lineNo) {};
   ~GateOut() {};
-  void setName(string &s) { _name = s; }
-  void setFanin (ID num) { _fanin = num; }
-  void updateFanin(ID from, ID to) {
-    if ((_fanin ^ from) <= 1)
-      _fanin = to ^ (_fanin & 1);
-  }
+
+  // name
+  const string& getName() const { return CirGateName::getName(); }
+  void setName(string &s) { CirGateName::setName(s); }
 
   // virtual
-  string getName() const { return _name; }
-  const ID* getFanin () const { return &_fanin ; }
+  const ID* getFanin () const { return &_fanin; }
   unsigned fanInSize() const { return 1; }
 
 private:
   ID _fanin;
-  string _name;
 };
 
-class GateAnd: public CirGateOut
+class GateAnd: public CirGateOut, public CirGateIn
 {
 public:
   GateAnd(ID ind=0, unsigned lineNo=0):
-    CirGateOut(AIG_GATE, ind, lineNo) { ++num; };
-  ~GateAnd() { --num; };
-  void setFanin (ID num0, ID num1) {
-    _fanin[0] = num0;
-    _fanin[1] = num1;
-  }
-  void updateFanin(ID from, ID to) {
-    for (unsigned j=0; j<2; ++j)
-      if ((_fanin[j] ^ from) <= 1)
-        _fanin[j] = to ^ (_fanin[j] & 1);
-  }
+    CirGateOut(AIG_GATE, ind, lineNo) { ++_num; };
+  ~GateAnd() { --_num; };
 
   // virtual
-  const ID* getFanin() const { return _fanin ; }
+  const ID* getFanin() const { return _fanin; }
   unsigned fanInSize() const { return 2; }
 
   // num of aig
-  static void resetNum() { num = 0; }
-  static unsigned getNum() { return num; }
+  static void resetNum() { _num = 0; }
+  static unsigned getNum() { return _num; }
 private:
-  static unsigned num;
+  static unsigned _num;
   ID _fanin[2];
 };
 

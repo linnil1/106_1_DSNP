@@ -39,9 +39,7 @@ void CirMgr::sweep()
     if (gate && gate->getType() != PI_GATE && gate->getType() != PO_GATE && !gate->isVisit()) {
       cout << "Sweeping: " << gate->getTypeStr()
            << '(' << i << ") removed..." << endl;
-      takeOutChild(gate, i);
-      delete gate;
-      _gates[i] = NULL;
+      delGate(i);
     }
   }
   findFloat();
@@ -115,19 +113,19 @@ void CirMgr::merge(ID from, ID to)
   CirGate *gateFrom = getGate(from),
           *gateTo   = getGate(to >> 1);
   ID inv = to & 1;
-  takeOutChild(gateFrom, from);
 
   for (const ID &i: gateFrom->getFanout()) {
     static_cast<CirGateOut*>(gateTo)->setFanout(i ^ inv);
     CirGate* gate = getGate(i >> 1);
-    if      (gate->getType() == PO_GATE )
-      static_cast<GateOut*> (gate)->updateFanin(from << 1, to);
-    else if (gate->getType() == AIG_GATE)
-      static_cast<GateAnd*>(gate)->updateFanin(from << 1, to);
-    else
-      assert(false);
+    // dangerous cast, be care for
+    dynamic_cast<CirGateIn*>(gate)->updateFanin(from << 1, to);
+    // if      (gate->getType() == PO_GATE )
+    //   static_cast<GateOut*>(gate)->updateFanin(from << 1, to);
+    // else if (gate->getType() == AIG_GATE)
+    //   static_cast<GateAnd*>(gate)->updateFanin(from << 1, to);
+    // else
+    //   assert(false);
   }
 
-  delete gateFrom;
-  _gates[from] = NULL;
+  delGate(from);
 }
