@@ -8,7 +8,6 @@
 
 #include <cassert>
 #include "cirMgr.h"
-#include "cirGate.h"
 #include "util.h"
 
 using namespace std;
@@ -60,6 +59,7 @@ void CirMgr::goSweep(ID id)
 // UNDEF gates may be delete if its fanout becomes empty...
 void CirMgr::optimize()
 {
+  mergeStr = "Simplifying";
   CirGate::setVisitFlag();
   for (unsigned i=0; i<MILOA[3]; ++i)
     goOptimize(MILOA[0] + i + 1);
@@ -95,19 +95,19 @@ void CirMgr::goOptimize(ID id)
 /***************************************************/
 /*   Private member functions about optimization   */
 /***************************************************/
-void CirMgr::takeOutChild(CirGate* gate, ID id)
+void CirMgr::takeOutChild(CirGate* gate)
 {
   for (unsigned j=0; j<gate->fanInSize(); ++j) {
     CirGate *gchild = getGate(gate->getFanin()[j] >> 1);
     if (gchild)
-      static_cast<CirGateOut*>(gchild)->removeFanout((id << 1) | (gate->getFanin()[j] & 1));
+      static_cast<CirGateOut*>(gchild)->removeFanout((gate->getIndex() << 1) | (gate->getFanin()[j] & 1));
   }
 }
 
 // Be care for from is gate index , to is 2*ind | inv
 void CirMgr::merge(ID from, ID to)
 {
-  cout << "Simplifying: " << (to >> 1)<< " merging "
+  cout << mergeStr << ": " << (to >> 1)<< " merging "
        << ((to & 1) ? "!" : "") << from << "...\n";
   assert(from != (to >> 1)); // merge itself
   CirGate *gateFrom = getGate(from),

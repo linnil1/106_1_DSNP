@@ -19,6 +19,7 @@ using namespace std;
 
 #include "cirDef.h"
 #include "cirGate.h"
+#include "myHashSet.h"
 
 extern CirMgr *cirMgr;
 
@@ -39,7 +40,7 @@ public:
   // return '0' if "gid" corresponds to an undefined gate.
   CirGate* getGate(ID gid) const { return _gates[gid]; }
   void delGate(ID& gid) {
-    takeOutChild(getGate(gid), gid); // Need make sure
+    takeOutChild(getGate(gid)); // Need make sure
     delete _gates[gid];
     _gates[gid] = NULL;
   }
@@ -80,25 +81,28 @@ private:
 
   // gate Operator
   void findFloat();
-  void takeOutChild(CirGate*, ID);
+  void takeOutChild(CirGate*);
   void merge(ID, ID); // real, with-inverse
 
   // others
   void printVector(const IdList &v) const;
+  string mergeStr;
 
   // dfs
   void goNetlist(unsigned, unsigned&) const;
   void goSweep(ID);
   void goOptimize(ID);
   void goFindAnd(unsigned, IdList&) const;
+  void goStrash(ID);
 
   // var
-  GateList     _gates;
-  unsigned     MILOA[5];
-  IdList       _ins, _outs,
-               _floats[2];
-  stringstream _comments;
-  ofstream     *_simLog;
+  GateList          _gates;
+  unsigned          MILOA[5];
+  IdList            _ins, _outs,
+                    _floats[2];
+  stringstream      _comments;
+  ofstream          *_simLog;
+  HashSet<GateAnd*> _hash;
 };
 
 #endif // CIR_MGR_H

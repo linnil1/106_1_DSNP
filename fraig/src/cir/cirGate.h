@@ -36,6 +36,7 @@ public:
   bool isAig() const { return _type == AIG_GATE; }
   string getTypeStr() const;
   unsigned getLineNo() const { return _line_no; }
+  ID getIndex() const { return _ind; }
 
   // Printing functions
   void reportGate() const;
@@ -177,6 +178,23 @@ public:
   // virtual
   const ID* getFanin() const { return _fanin; }
   unsigned fanInSize() const { return 2; }
+
+  // hash
+  size_t operator () () const {
+    bool c = _fanin[0] > _fanin[1],
+         inv = _fanin[c] & 1;
+    return 888777 * (_fanin[c] ^ inv) + (_fanin[!c] ^ inv);
+  }
+  bool operator == (const GateAnd& b) const {
+    bool ia =   _fanin[0] >   _fanin[1],
+         ib = b._fanin[0] > b._fanin[1];
+    return (_fanin[ia] ^ b._fanin[ib]) == (_fanin[!ia] ^ b._fanin[!ib]) &&
+           (_fanin[ia] ^ b._fanin[ib]) <= 1;
+  }
+  bool isInv(const GateAnd& b) const { // use it after ==
+    return (  _fanin[  _fanin[0] >   _fanin[1]] ^
+            b._fanin[b._fanin[0] > b._fanin[1]] ) == 1;
+  }
 
   // num of aig
   static void resetNum() { _num = 0; }
