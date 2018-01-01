@@ -10,15 +10,13 @@
 #define CIR_GATE_H
 
 #include <string>
-#include <vector>
 #include <iostream>
 #include "cirDef.h"
 #include "sat.h"
-
 using namespace std;
-
 class CirGate;
 
+static IdSet null_idset;
 //------------------------------------------------------------------------
 //   Define classes
 //------------------------------------------------------------------------
@@ -43,7 +41,8 @@ public:
   // fanin fanout
   virtual unsigned fanInSize() const { return 0; }
   virtual const ID* getFanin() const { return NULL; }
-  virtual IdList getFanout() const { return IdList(); }
+  virtual const IdSet& getFanout() const { return null_idset; }
+  virtual unsigned fanOutSize() const { return 0; }
 
   // names for pi po
   virtual string getName() const { return ""; }
@@ -77,11 +76,13 @@ public:
   CirGateOut(int type=0, ID ind=0, unsigned lineNo=0)
     :CirGate(type, ind, lineNo) {};
   ~CirGateOut() {};
-  void setFanout(ID num) { _fanout.push_back(num); }
-  IdList getFanout() const { return _fanout; }
+  void setFanout(ID num) { _fanout.insert(num); }
+  const IdSet& getFanout() const { return _fanout; }
+  void removeFanout(ID gid) { _fanout.erase(gid); }
+  unsigned fanOutSize() const { return _fanout.size(); }
 
 private:
-  IdList _fanout;
+  IdSet _fanout;
 };
 
 class GateUndef: public CirGateOut

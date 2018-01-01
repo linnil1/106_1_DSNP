@@ -33,7 +33,7 @@ public:
 
   // Access functions
   // return '0' if "gid" corresponds to an undefined gate.
-  CirGate* getGate(unsigned gid) const { return _gates[gid]; }
+  CirGate* getGate(ID gid) const { return _gates[gid]; }
 
   // Member functions about circuit construction
   bool readCircuit(const string&);
@@ -46,7 +46,6 @@ public:
   void randomSim();
   void fileSim(ifstream&);
   void setSimLog(ofstream *logFile) { _simLog = logFile; }
-  unsigned getSize() const { return MILOA[0]; }
 
   // Member functions about fraig
   void strash();
@@ -63,10 +62,17 @@ public:
   void writeAag(ostream&) const;
   void writeGate(ostream&, CirGate*) const;
 
-
 private:
+  // read
+  void hasSpace(fstream&, string&, string);
+  void isnotUnsigned(stringstream&, unsigned&);
+  void isnotGate(stringstream&, unsigned&, bool);
+  void hasMore(stringstream&);
+
+  // others
   void printVector(const IdList &v) const;
   void goNetlist(unsigned, unsigned&) const;
+  void goSweep(ID);
   void findAnd(unsigned, IdList&) const;
   GateList _gates;
   unsigned MILOA[5];

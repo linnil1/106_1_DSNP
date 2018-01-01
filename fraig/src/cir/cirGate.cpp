@@ -72,7 +72,7 @@ void CirGate::goFanout (unsigned level, bool no) const
     return ;
   cout << string(level * 2, ' ')
        << (no ? "!" : "" ) << getTypeStr() << " " << _ind;
-  if (level < _max_level && getFanout().size() && isVisit()) {
+  if (level < _max_level && fanOutSize() && isVisit()) {
     cout << " (*)\n";
     return ;
   }

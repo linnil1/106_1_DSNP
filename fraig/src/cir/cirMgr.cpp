@@ -149,7 +149,7 @@ static bool parseError(CirParseError err)
 /**************************************************************/
 /*   class CirMgr member functions for circuit construction   */
 /**************************************************************/
-void hasSpace(fstream &fs, string& s, string err)
+void CirMgr::hasSpace(fstream &fs, string& s, string err)
 {
   ++lineNo;
   if (!getline(fs, s)) {
@@ -184,7 +184,7 @@ void hasSpace(fstream &fs, string& s, string err)
   colNo = 1;
 }
 
-void isnotUnsigned(stringstream &ss, unsigned& tar)
+void CirMgr::isnotUnsigned(stringstream &ss, unsigned& tar)
 {
   string s;
   unsigned len = ss.str().size();
@@ -203,11 +203,11 @@ void isnotUnsigned(stringstream &ss, unsigned& tar)
   tar = unsigned(k);
 }
 
-void isnotGate(stringstream &ss, unsigned& tar, bool checkExist=true)
+void CirMgr::isnotGate(stringstream &ss, unsigned& tar, bool checkExist=true)
 {
   isnotUnsigned(ss, tar);
   errInt = tar;
-  if ((tar >> 1) > cirMgr->getSize())
+  if ((tar >> 1) > MILOA[0])
     throw MAX_LIT_ID;
   if (checkExist && cirMgr->getGate(tar >> 1)) {
     errGate = cirMgr->getGate(tar >> 1);
@@ -215,7 +215,7 @@ void isnotGate(stringstream &ss, unsigned& tar, bool checkExist=true)
   }
 }
 
-void hasMore(stringstream &ss)
+void CirMgr::hasMore(stringstream &ss)
 {
   ss.peek();
   if (!ss.eof())
@@ -428,7 +428,7 @@ bool CirMgr::readCircuit(const string& fileName)
         _floats[0].push_back(i);
 
       // float fanout
-      if (!_gates[i]->getFanout().size() &&
+      if (!_gates[i]->fanOutSize() &&
           _gates[i]->getType() != PO_GATE &&  _gates[i]->getType() != UNDEF_GATE)
         _floats[1].push_back(i);
     }

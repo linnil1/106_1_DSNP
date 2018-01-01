@@ -32,6 +32,33 @@ using namespace std;
 // UNDEF, float and unused list may be changed
 void CirMgr::sweep()
 {
+  CirGate::setVisitFlag();
+  for (unsigned i=0; i<MILOA[3]; ++i)
+    goSweep(MILOA[0] + i + 1);
+  for (unsigned i=1; i<=MILOA[0]; ++i) {
+    CirGate *gate = getGate(i);
+    if (gate && gate->getType() != PI_GATE && gate->getType() != PO_GATE && !gate->isVisit()) {
+      cout << "Sweeping: " << gate->getTypeStr()
+           << '(' << i << ") removed..." << endl;
+      for (unsigned j=0; j<gate->fanInSize(); ++j) {
+        CirGate *gchild = getGate(gate->getFanin()[j] >> 1);
+        if (gchild)
+          static_cast<CirGateOut*>(gchild)->removeFanout((i << 1) | (gate->getFanin()[j] & 1));
+      }
+      delete gate;
+      _gates[i] = NULL;
+    }
+  }
+}
+
+void CirMgr::goSweep(ID id)
+{
+  CirGate *gate = getGate(id);
+  assert(gate);
+  if (gate->getType() == UNDEF_GATE || gate->isVisit())
+    return ;
+  for (unsigned i=0; i<gate->fanInSize(); ++i)
+    goSweep(gate->getFanin()[i] >> 1);
 }
 
 // Recursively simplifying from POs;

@@ -10,6 +10,7 @@
 #define CIR_DEF_H
 
 #include <vector>
+#include <set>
 #include "myHashMap.h"
 
 using namespace std;
@@ -23,6 +24,7 @@ class SatSolver;
 typedef unsigned         ID;
 typedef vector<CirGate*> GateList;
 typedef vector<ID>       IdList;
+typedef set<ID>          IdSet;
 
 enum GateType
 {
