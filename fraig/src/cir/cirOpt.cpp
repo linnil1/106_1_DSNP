@@ -49,13 +49,14 @@ void CirMgr::sweep()
       _gates[i] = NULL;
     }
   }
+  findFloat();
 }
 
 void CirMgr::goSweep(ID id)
 {
   CirGate *gate = getGate(id);
   assert(gate);
-  if (gate->getType() == UNDEF_GATE || gate->isVisit())
+  if (gate->isVisit())
     return ;
   for (unsigned i=0; i<gate->fanInSize(); ++i)
     goSweep(gate->getFanin()[i] >> 1);

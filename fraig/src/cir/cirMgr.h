@@ -18,13 +18,17 @@
 using namespace std;
 
 #include "cirDef.h"
+#include "cirGate.h"
 
 extern CirMgr *cirMgr;
 
 class CirMgr
 {
 public:
-  CirMgr() {}
+  CirMgr() {
+    CirGate::resetVis(); // make sure (opt)
+    GateAnd::resetNum(); // make sure (opt)
+  }
   ~CirMgr() {
     for (unsigned i=0; i<_gates.size(); ++i)
       if (_gates[i])
@@ -70,6 +74,7 @@ private:
   void hasMore(stringstream&);
 
   // others
+  void findFloat();
   void printVector(const IdList &v) const;
   void goNetlist(unsigned, unsigned&) const;
   void goSweep(ID);

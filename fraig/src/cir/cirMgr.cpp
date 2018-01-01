@@ -15,7 +15,6 @@
 #include <cstring>
 #include <sstream>
 #include "cirMgr.h"
-#include "cirGate.h"
 #include "util.h"
 
 using namespace std;
@@ -26,6 +25,7 @@ using namespace std;
 CirMgr* cirMgr = 0;
 unsigned CirGate::_max_level = 0;
 unsigned CirGate::_visited_flag= 0;
+unsigned GateAnd::num = 0;
 
 enum CirParseError {
   EXTRA_SPACE,
@@ -412,9 +412,16 @@ bool CirMgr::readCircuit(const string& fileName)
         static_cast<CirGateOut*>(getGate(k >> 1))->setFanout((i << 1) + (k & 1));
       }
 
-  // find floating
+  findFloat();
+  return true;
+}
+
+void CirMgr::findFloat()
+{
+  _floats[0].clear();
+  _floats[1].clear();
   for (unsigned i=1; i<_gates.size(); ++i)
-    if (_gates[i]) {
+    if (_gates[i] && _gates[i]->getType() != UNDEF_GATE) {
       // float fanin
       bool ok = true;
       for (unsigned j=0; j<_gates[i]->fanInSize(); ++j) {
@@ -424,16 +431,14 @@ bool CirMgr::readCircuit(const string& fileName)
           ok = false;
       }
       if ((!ok || !_gates[i]->fanInSize()) &&
-          _gates[i]->getType() != PI_GATE &&  _gates[i]->getType() != UNDEF_GATE)
+          _gates[i]->getType() != PI_GATE)
         _floats[0].push_back(i);
 
       // float fanout
       if (!_gates[i]->fanOutSize() &&
-          _gates[i]->getType() != PO_GATE &&  _gates[i]->getType() != UNDEF_GATE)
+          _gates[i]->getType() != PO_GATE)
         _floats[1].push_back(i);
     }
-
-  return true;
 }
 
 /**********************************************************/
@@ -455,9 +460,9 @@ void CirMgr::printSummary() const
        << "==================" << endl
        << "  PI"    << setw(12) << right << MILOA[1] << endl
        << "  PO"    << setw(12) << right << MILOA[3] << endl
-       << "  AIG"   << setw(11) << right << MILOA[4] << endl
+       << "  AIG"   << setw(11) << right << GateAnd::getNum() << endl
        << "------------------" << endl
-       << "  Total" << setw( 9) << right << MILOA[1] + MILOA[3] + MILOA[4] << endl;
+       << "  Total" << setw( 9) << right << MILOA[1] + MILOA[3] + GateAnd::getNum() << endl;
 }
 
 void CirMgr::printNetlist() const

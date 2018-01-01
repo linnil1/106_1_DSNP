@@ -52,6 +52,7 @@ public:
   bool isVisit() const;
   static void setVisitFlag() { ++_visited_flag; }
   void netPrint() const;
+  static void resetVis() { _max_level = _visited_flag = 0; }
 
   // virtual void printGate() const {} // no used
 private:
@@ -66,8 +67,8 @@ private:
 protected:
   ID _ind;
 
-  void goFanin (ID ,bool) const;
-  void goFanout(ID ,bool) const;
+  void goFanin (ID, bool) const;
+  void goFanout(ID, bool) const;
 };
 
 class CirGateOut: public CirGate
@@ -135,8 +136,8 @@ class GateAnd: public CirGateOut
 {
 public:
   GateAnd(ID ind=0, unsigned lineNo=0):
-    CirGateOut(AIG_GATE, ind, lineNo) {};
-  ~GateAnd() {};
+    CirGateOut(AIG_GATE, ind, lineNo) { ++num; };
+  ~GateAnd() { --num; };
   void setFanin (ID num0, ID num1) {
     _fanin[0] = num0;
     _fanin[1] = num1;
@@ -144,7 +145,11 @@ public:
   const ID* getFanin() const { return _fanin ; }
   unsigned fanInSize() const { return 2; }
 
+  // num of aig
+  static void resetNum() { num = 0; }
+  static unsigned getNum() { return num; }
 private:
+  static unsigned num;
   ID _fanin[2];
 };
 
