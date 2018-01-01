@@ -121,9 +121,15 @@ public:
   GateOut(ID ind, unsigned lineNo=0):
     CirGate(PO_GATE, ind, lineNo) {};
   ~GateOut() {};
-  string getName() const { return _name; }
   void setName(string &s) { _name = s; }
   void setFanin (ID num) { _fanin = num; }
+  void updateFanin(ID from, ID to) {
+    if ((_fanin ^ from) <= 1)
+      _fanin = to ^ (_fanin & 1);
+  }
+
+  // virtual
+  string getName() const { return _name; }
   const ID* getFanin () const { return &_fanin ; }
   unsigned fanInSize() const { return 1; }
 
@@ -142,6 +148,13 @@ public:
     _fanin[0] = num0;
     _fanin[1] = num1;
   }
+  void updateFanin(ID from, ID to) {
+    for (unsigned j=0; j<2; ++j)
+      if ((_fanin[j] ^ from) <= 1)
+        _fanin[j] = to ^ (_fanin[j] & 1);
+  }
+
+  // virtual
   const ID* getFanin() const { return _fanin ; }
   unsigned fanInSize() const { return 2; }
 

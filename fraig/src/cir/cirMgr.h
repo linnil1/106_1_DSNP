@@ -73,12 +73,21 @@ private:
   void isnotGate(stringstream&, unsigned&, bool);
   void hasMore(stringstream&);
 
-  // others
+  // gate Operator
   void findFloat();
+  void takeOutChild(CirGate*, ID);
+  void merge(ID, ID); // real, with-inverse
+
+  // others
   void printVector(const IdList &v) const;
+
+  // dfs
   void goNetlist(unsigned, unsigned&) const;
   void goSweep(ID);
+  void goOptimize(ID);
   void findAnd(unsigned, IdList&) const;
+
+  // var
   GateList _gates;
   unsigned MILOA[5];
   IdList _ins, _outs,
