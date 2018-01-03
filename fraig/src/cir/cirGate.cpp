@@ -24,14 +24,19 @@ extern CirMgr *cirMgr;
 /**************************************/
 void CirGate::reportGate() const
 {
-  stringstream ss;
-  ss <<  "= " <<  getTypeStr() << "(" <<  _ind <<  ")";
+  cout << "================================================================================\n"
+       <<  "= " <<  getTypeStr() << "(" <<  _ind <<  ")";
   if (getName().size())
-    ss << "\"" << getName() << "\"";
-  ss <<  ", line " <<  _line_no;
-  cout << "==================================================" << endl
-       << setw(49) << left << ss.str() << "=" << endl
-       << "==================================================" << endl;
+    cout << "\"" << getName() << "\"";
+  cout <<  ", line " << _line_no << endl
+       << "= FECs:\n"
+       << "= Value: ";
+  for (int i=63; i>=0; --i) {
+    cout << ((_sim >> i) & 1);
+    if (i && !(i & 0x7))
+      cout << '_';
+  }
+  cout << "\n================================================================================\n";
 }
 
 void CirGate::reportFanin(int level) const
@@ -133,4 +138,14 @@ bool GateAnd::operator == (const GateAnd& b) const {
   bool ia =   _fanin[0] >   _fanin[1],
        ib = b._fanin[0] > b._fanin[1];
   return (_fanin[ia] == b._fanin[ib]) && (_fanin[!ia] == b._fanin[!ib]);
+}
+
+void GateAnd::simulate() {
+  _sim = cirMgr->getVal(_fanin[0]) &
+         cirMgr->getVal(_fanin[1]);
+}
+
+// gateout
+void GateOut::simulate() {
+  _sim = cirMgr->getVal(_fanin);
 }

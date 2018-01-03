@@ -28,7 +28,7 @@ class CirGate
 {
 public:
   CirGate(int type, ID& ind, unsigned& lineNo):
-    _type(type), _line_no(lineNo + 1), _ind(ind), _visited(0) {};
+    _type(type), _line_no(lineNo + 1), _ind(ind), _visited(0), _sim(0) {};
   virtual ~CirGate() {}
 
   // Basic access methods
@@ -58,6 +58,10 @@ public:
   virtual const string& getName() const { return null_str; }
   virtual void setName(string &s) {}
 
+  // sim
+  Value getSim() { return _sim; }
+  virtual void simulate() {}
+
   // virtual void printGate() const {} // no used
 private:
   int              _type;
@@ -72,6 +76,9 @@ private:
   // report gate by dfs
   void goFanin (ID, bool) const;
   void goFanout(ID, bool) const;
+
+protected:
+  Value            _sim;
 };
 
 class CirGateOut: public CirGate
@@ -137,6 +144,8 @@ public:
   // name
   const string& getName() const { return CirGateName::getName(); }
   void setName(string &s) { CirGateName::setName(s); }
+  // sim
+  void setSim(Value a) { _sim = a; }
 };
 
 class GateOut: public CirGate, public CirGateName, public CirGateIn
@@ -154,6 +163,8 @@ public:
   const ID* getFanin () const { return &_fanin; }
   unsigned fanInSize() const { return 1; }
 
+  // sim
+  void simulate();
 private:
   ID _fanin;
 };
@@ -176,6 +187,9 @@ public:
   // num of aig
   static void resetNum() { _num = 0; }
   static unsigned getNum() { return _num; }
+
+  // sim
+  void simulate();
 private:
   static unsigned _num;
   ID _fanin[2];

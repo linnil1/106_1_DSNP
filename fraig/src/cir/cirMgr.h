@@ -40,6 +40,10 @@ public:
   // return '0' if "gid" corresponds to an undefined gate.
   CirGate* getGate(ID gid) const { return _gates[gid]; }
   void delGate(ID&);
+  Value getVal(ID id) {
+    return getGate(id >> 1)->getSim() ^
+                 ((id &  1) ? ULONG_MAX : 0); }
+
 
   // Member functions about circuit construction
   bool readCircuit(const string&);
@@ -90,6 +94,7 @@ private:
   void goOptimize(ID);
   void goFindAnd(unsigned, IdList&) const;
   void goStrash(ID);
+  void goSim(ID);
 
   // var
   GateList          _gates;

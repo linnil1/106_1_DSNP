@@ -25,6 +25,7 @@ typedef unsigned         ID;
 typedef vector<CirGate*> GateList;
 typedef vector<ID>       IdList;
 typedef set<ID>          IdSet;
+typedef unsigned long    Value;
 
 enum GateType
 {
