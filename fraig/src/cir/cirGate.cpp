@@ -125,19 +125,12 @@ void CirGateIn::updateFanin(ID from, ID to) {
 /*   class GateAnd member functions   */
 /**************************************/
 size_t GateAnd::operator () () const {
-  bool c = _fanin[0] > _fanin[1],
-       inv = _fanin[c] & 1;
-  return 888777 * (_fanin[c] ^ inv) + (_fanin[!c] ^ inv);
+  bool c = _fanin[0] > _fanin[1];
+  return 888777 * _fanin[c] + _fanin[!c];
 }
 
 bool GateAnd::operator == (const GateAnd& b) const {
   bool ia =   _fanin[0] >   _fanin[1],
        ib = b._fanin[0] > b._fanin[1];
-  return (_fanin[ia] ^ b._fanin[ib]) <= 1 &&
-         (_fanin[ia] ^ b._fanin[ib]) == (_fanin[!ia] ^ b._fanin[!ib]);
-}
-
-bool GateAnd::isInv(const GateAnd& b) const { // use it after ==
-  return (  _fanin[  _fanin[0] >   _fanin[1]] ^
-          b._fanin[b._fanin[0] > b._fanin[1]] ) == 1;
+  return (_fanin[ia] == b._fanin[ib]) && (_fanin[!ia] == b._fanin[!ib]);
 }

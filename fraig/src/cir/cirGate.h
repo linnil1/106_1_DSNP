@@ -172,7 +172,6 @@ public:
   // hash
   size_t operator () () const;
   bool operator == (const GateAnd& b) const;
-  bool isInv(const GateAnd& b) const; // use it after ==
 
   // num of aig
   static void resetNum() { _num = 0; }

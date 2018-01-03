@@ -55,7 +55,7 @@ void CirMgr::goStrash(ID id)
   GateAnd *gateAnd = static_cast<GateAnd*>(gate);
   GateAnd *to = _hash.insert(gateAnd);
   if (to)
-    merge(id, (to->getIndex() << 1) | (gateAnd->isInv(*to)));
+    merge(id, (to->getIndex() << 1));
 }
 
 void CirMgr::fraig()
