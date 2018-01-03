@@ -18,7 +18,7 @@ using namespace std;
 // Define HashSet class
 //---------------------
 // To use HashSet ADT,
-// the class "Data" should at least overload the "()" and "==" operators.
+// the class "Pdata*" should at least overload the "()" and "==" operators.
 //
 // "operator ()" is to generate the hash key (size_t)
 // that will be % by _numBuckets to get the bucket number.
@@ -35,11 +35,12 @@ class HashSet
 {
   typedef vector<Pdata> VDATA;
 public:
-  HashSet(size_t s = 0) { init(s); }
+  HashSet(size_t s=0) { init(s); }
   ~HashSet() { reset(); }
 
   void init(size_t s) {
     _numBuckets = s;
+    assert(!_buckets);
     if (s)
       _buckets = new VDATA[s];
   }
@@ -47,32 +48,20 @@ public:
     _numBuckets = 0;
     if (_buckets) {
       delete [] _buckets;
-      _buckets = 0;
+      _buckets = NULL;
     }
   }
-
-#define findIt() \
-  VDATA &v = _buckets[bucketNum(d)]; \
-  typename VDATA::iterator it = find_if(v.begin(), v.end(), [&](Pdata& p) { return *p == *d; });
 
   // return NULL if inserted successfully (i.e. d is not in the hash)
   // return pointer is d is already in the hash ==> will not insert and return
   Pdata insert(Pdata d) {
-    findIt();
+    VDATA &v = _buckets[bucketNum(d)];
+    typename VDATA::iterator it = find_if(v.begin(), v.end(),
+      [&](Pdata& p) { return *p == *d; });
     if (it != v.end())
       return *it;
     v.push_back(d);
     return NULL;
-  }
-
-  // return true if removed successfully (i.e. d is in the hash)
-  // return fasle otherwise (i.e. nothing is removed)
-  bool remove(Pdata d) {
-    findIt();
-    if (it == v.end())
-      return false;
-    v.erase(it);
-    return true;
   }
 
 private:

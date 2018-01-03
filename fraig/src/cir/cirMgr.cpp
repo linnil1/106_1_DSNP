@@ -401,7 +401,6 @@ bool CirMgr::readCircuit(const string& fileName)
     return false;
   };
 
-
   // backward
   for (unsigned i=0; i<_gates.size(); ++i)
     if (_gates[i] && _gates[i]->fanInSize())
@@ -482,8 +481,21 @@ void CirMgr::goNetlist(unsigned id, unsigned& num) const
     return ;
   for (unsigned i=0; i<gate->fanInSize(); ++i)
     goNetlist(gate->getFanin()[i] >> 1, num);
-  cout << "[" << num++ << "] ";
-  gate->netPrint();
+  cout << "[" << num++ << "] "
+       << setw(4) << left << gate->getTypeStr() << id;
+  for (unsigned i=0; i<gate->fanInSize(); ++i) {
+    cout << ' ';
+    ID gid = gate->getFanin()[i];
+    CirGate *gchild = cirMgr->getGate(gid >> 1);
+    if (!gchild || gchild->getType() == UNDEF_GATE)
+      cout << '*';
+    if (gid & 1)
+      cout << '!';
+     cout << (gid >> 1);
+  }
+  if (gate->getName().size())
+    cout << " (" << gate->getName() << ")";
+  cout << endl;
 }
 
 void CirMgr::printPIs() const
@@ -569,6 +581,11 @@ void CirMgr::goFindAnd(unsigned id, IdList& v) const
     v.push_back(id);
 }
 
+void CirMgr::delGate(ID& gid) {
+  takeOutChild(getGate(gid)); // Need make sure
+  delete _gates[gid];
+  _gates[gid] = NULL;
+}
 
 // TODO
 void CirMgr::printFECPairs() const

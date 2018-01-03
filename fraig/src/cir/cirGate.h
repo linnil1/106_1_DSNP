@@ -28,7 +28,7 @@ class CirGate
 {
 public:
   CirGate(int type, ID& ind, unsigned& lineNo):
-    _type(type), _line_no(lineNo + 1), _visited(0), _ind(ind) {};
+    _type(type), _line_no(lineNo + 1), _ind(ind), _visited(0) {};
   virtual ~CirGate() {}
 
   // Basic access methods
@@ -42,7 +42,6 @@ public:
   void reportGate() const;
   void reportFanin (int level) const;
   void reportFanout(int level) const;
-  void netPrint() const;
 
   // fanin fanout
   virtual unsigned fanInSize() const { return 0; }
@@ -63,14 +62,12 @@ public:
 private:
   int              _type;
   unsigned         _line_no;
+  ID               _ind;
 
   // visit
   mutable unsigned _visited;
   static unsigned  _max_level;
   static unsigned  _visited_flag;
-
-protected:
-  ID               _ind;
 
   // report gate by dfs
   void goFanin (ID, bool) const;
@@ -108,15 +105,8 @@ class CirGateIn
 public:
   CirGateIn() {};
   ~CirGateIn() {};
-  void setFanin (ID* num) {
-    for (unsigned i=0; i<fanInSize(); ++i)
-      const_cast<ID*>(getFanin())[i] = num[i];
-  }
-  void updateFanin(ID from, ID to) {
-    for (unsigned i=0; i<fanInSize(); ++i)
-      if ((getFanin()[i] ^ from) <= 1)
-        const_cast<ID*>(getFanin())[i] = to ^ (getFanin()[i] & 1);
-  }
+  void setFanin (ID* num);
+  void updateFanin(ID from, ID to);
   virtual unsigned fanInSize() const = 0;
   virtual const ID* getFanin() const = 0;
 };
@@ -180,21 +170,9 @@ public:
   unsigned fanInSize() const { return 2; }
 
   // hash
-  size_t operator () () const {
-    bool c = _fanin[0] > _fanin[1],
-         inv = _fanin[c] & 1;
-    return 888777 * (_fanin[c] ^ inv) + (_fanin[!c] ^ inv);
-  }
-  bool operator == (const GateAnd& b) const {
-    bool ia =   _fanin[0] >   _fanin[1],
-         ib = b._fanin[0] > b._fanin[1];
-    return (_fanin[ia] ^ b._fanin[ib]) == (_fanin[!ia] ^ b._fanin[!ib]) &&
-           (_fanin[ia] ^ b._fanin[ib]) <= 1;
-  }
-  bool isInv(const GateAnd& b) const { // use it after ==
-    return (  _fanin[  _fanin[0] >   _fanin[1]] ^
-            b._fanin[b._fanin[0] > b._fanin[1]] ) == 1;
-  }
+  size_t operator () () const;
+  bool operator == (const GateAnd& b) const;
+  bool isInv(const GateAnd& b) const; // use it after ==
 
   // num of aig
   static void resetNum() { _num = 0; }

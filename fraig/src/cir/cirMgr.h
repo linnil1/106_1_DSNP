@@ -39,11 +39,7 @@ public:
   // Access functions
   // return '0' if "gid" corresponds to an undefined gate.
   CirGate* getGate(ID gid) const { return _gates[gid]; }
-  void delGate(ID& gid) {
-    takeOutChild(getGate(gid)); // Need make sure
-    delete _gates[gid];
-    _gates[gid] = NULL;
-  }
+  void delGate(ID&);
 
   // Member functions about circuit construction
   bool readCircuit(const string&);
@@ -83,10 +79,10 @@ private:
   void findFloat();
   void takeOutChild(CirGate*);
   void merge(ID, ID); // real, with-inverse
+  string mergeStr;
 
   // others
   void printVector(const IdList &v) const;
-  string mergeStr;
 
   // dfs
   void goNetlist(unsigned, unsigned&) const;
