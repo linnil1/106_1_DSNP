@@ -41,7 +41,6 @@ void CirMgr::sweep()
       delGate(i);
     }
   }
-  findFloat();
 }
 
 void CirMgr::goSweep(ID id)
@@ -63,7 +62,6 @@ void CirMgr::optimize()
   CirGate::setVisitFlag();
   for (unsigned i=0; i<MILOA[3]; ++i)
     goOptimize(MILOA[0] + i + 1);
-  findFloat();
 }
 
 void CirMgr::goOptimize(ID id)
@@ -95,37 +93,3 @@ void CirMgr::goOptimize(ID id)
 /***************************************************/
 /*   Private member functions about optimization   */
 /***************************************************/
-void CirMgr::takeOutChild(CirGate* gate)
-{
-  for (unsigned j=0; j<gate->fanInSize(); ++j) {
-    CirGate *gchild = getGate(gate->getFanin()[j] >> 1);
-    if (gchild)
-      static_cast<CirGateOut*>(gchild)->removeFanout((gate->getIndex() << 1) | (gate->getFanin()[j] & 1));
-  }
-}
-
-// Be care for from is gate index , to is 2*ind | inv
-void CirMgr::merge(ID from, ID to)
-{
-  cout << mergeStr << ": " << (to >> 1)<< " merging "
-       << ((to & 1) ? "!" : "") << from << "...\n";
-  assert(from != (to >> 1)); // merge itself
-  CirGate *gateFrom = getGate(from),
-          *gateTo   = getGate(to >> 1);
-  ID inv = to & 1;
-
-  for (const ID &i: gateFrom->getFanout()) {
-    static_cast<CirGateOut*>(gateTo)->setFanout(i ^ inv);
-    CirGate* gate = getGate(i >> 1);
-    // dangerous cast, be care for
-    dynamic_cast<CirGateIn*>(gate)->updateFanin(from << 1, to);
-    // if      (gate->getType() == PO_GATE )
-    //   static_cast<GateOut*>(gate)->updateFanin(from << 1, to);
-    // else if (gate->getType() == AIG_GATE)
-    //   static_cast<GateAnd*>(gate)->updateFanin(from << 1, to);
-    // else
-    //   assert(false);
-  }
-
-  delGate(from);
-}

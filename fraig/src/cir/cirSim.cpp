@@ -34,7 +34,8 @@ using namespace std;
 void CirMgr::randomSim()
 {
   simInit();
-  int times = 1;
+  int times = _ins.size();
+  int n = times * 64;
   while (times--) {
     for (ID &id: _ins)
       static_cast<GateIn*>(getGate(id))->setSim(
@@ -43,6 +44,7 @@ void CirMgr::randomSim()
         Value(my_random()));
     simulate(64);
   }
+  cout << n << " patterns simulated.\n";
   collectFec();
 }
 
@@ -57,7 +59,6 @@ void CirMgr::fileSim(ifstream& patternFile)
   while (con) {
     // read
     if (patternFile >> s) {
-      ++n;
       // error
       if (s.size() != sz) {
         cerr << "Error: Pattern(" << s << ") length(" << s.size()
@@ -65,12 +66,13 @@ void CirMgr::fileSim(ifstream& patternFile)
              << (n / 64 * 64) << " patterns simulated.\n";
         return ;
       }
+      ++n;
       for (unsigned i=0; i<sz; ++i) {
         // error
         if (s[i] != '0' && s[i] != '1') {
           cerr << "Error: Pattern(" << s << ")  contains a non-0/1 character('"
                << s[i] << "').\n"
-               << (n / 64 * 64) << " patterns simulated.\n";
+               << ((n - 1) / 64 * 64) << " patterns simulated.\n";
           return ;
         }
         // input
@@ -160,24 +162,4 @@ void CirMgr::collectFec()
     unsigned g = getGate(i >> 1)->getFec();
     _fecCollect[g].push_back(i);
   }
-}
-
-void CirMgr::printVector2(const IdList &v, bool std, ID skip/*=UINT_MAX*/) const
-{
-  for (const unsigned& gid:v) {
-    if (gid >> 1 == skip)
-      continue;
-    cout << ' ';
-    if ((getVal(gid) & 1) ^ std ^ (gid & 1))
-      cout << '!';
-    cout << (gid >> 1);
-  }
-}
-
-void CirMgr::printFEC(const ID id) const
-{
-  if (!_simStart)
-    return ;
-  CirGate *gate = getGate(id);
-  printVector2(_fecCollect[gate->getFec()], gate->getSim() & 1, id);
 }

@@ -40,12 +40,10 @@ public:
   // return '0' if "gid" corresponds to an undefined gate.
   CirGate* getGate(ID gid) const { return _gates[gid]; }
   void delGate(ID&);
-  Value getVal(ID id) {
-    return getGate(id >> 1)->getSim() ^
-                 ((id &  1) ? ULONG_MAX : 0); }
   Value getVal(ID id) const {
     return getGate(id >> 1)->getSim() ^
                  ((id &  1) ? ULONG_MAX : 0); }
+  void printFEC(const ID) const;
 
 
   // Member functions about circuit construction
@@ -62,7 +60,6 @@ public:
 
   // Member functions about fraig
   void strash();
-  void printFEC(const ID) const;
   void fraig();
 
   // Member functions about circuit reporting
@@ -83,14 +80,14 @@ private:
   void hasMore(stringstream&);
 
   // gate Operator
-  void findFloat();
+  void findFloat() const;
   void takeOutChild(CirGate*);
   void merge(ID, ID); // real, with-inverse
   string mergeStr;
 
   // others
   void printVector(const IdList&) const;
-  void printVector2(const IdList&, bool, ID=UINT_MAX) const;
+  void printVector2(const IdList&, ID, bool=false) const;
 
   // dfs
   void goNetlist(unsigned, unsigned&) const;
@@ -107,11 +104,14 @@ private:
   // var
   GateList          _gates;
   unsigned          MILOA[5];
-  IdList            _ins, _outs,
-                    _floats[2];
+  IdList            _ins, _outs;
   stringstream      _comments;
   ofstream          *_simLog;
   HashSet<GateAnd*> _hash;
+
+  // float
+  mutable IdList    _floats[2];
+  mutable bool      _moreFloat;
 
   // simulate
   bool              _simStart;

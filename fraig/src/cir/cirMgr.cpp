@@ -411,33 +411,8 @@ bool CirMgr::readCircuit(const string& fileName)
         static_cast<CirGateOut*>(getGate(k >> 1))->setFanout((i << 1) + (k & 1));
       }
 
-  findFloat();
+  _moreFloat = true;
   return true;
-}
-
-void CirMgr::findFloat()
-{
-  _floats[0].clear();
-  _floats[1].clear();
-  for (unsigned i=1; i<_gates.size(); ++i)
-    if (_gates[i] && _gates[i]->getType() != UNDEF_GATE) {
-      // float fanin
-      bool ok = true;
-      for (unsigned j=0; j<_gates[i]->fanInSize(); ++j) {
-        CirGate *now = getGate(_gates[i]->getFanin()[j] >> 1);
-        assert(now);
-        if (now->getType() == UNDEF_GATE)
-          ok = false;
-      }
-      if ((!ok || !_gates[i]->fanInSize()) &&
-          _gates[i]->getType() != PI_GATE)
-        _floats[0].push_back(i);
-
-      // float fanout
-      if (!_gates[i]->fanOutSize() &&
-          _gates[i]->getType() != PO_GATE)
-        _floats[1].push_back(i);
-    }
 }
 
 /**********************************************************/
@@ -510,8 +485,49 @@ void CirMgr::printPOs() const
   printVector(_outs);
 }
 
+void CirMgr::printFECPairs() const
+{
+  for (unsigned i=1; i<=_groupMax; ++i) {
+    cout << '[' << i - 1 << ']';
+    printVector2(_fecCollect[i], (_fecCollect[i][0] >> 1) << 1);
+    cout << endl;
+  }
+}
+
+void CirMgr::printFEC(const ID id) const
+{
+  if (!_simStart)
+    return ;
+  CirGate *gate = getGate(id);
+  printVector2(_fecCollect[gate->getFec()], id * 2, true);
+}
+
+void CirMgr::printVector(const IdList &v) const
+{
+  for (const unsigned &i: v)
+    cout << " " << i;
+  cout << endl;
+}
+
+void CirMgr::printVector2(const IdList &v, ID ref, bool skip/*=false*/) const
+{
+  bool s = getVal(ref) & 1;
+  for (const unsigned& gid:v) {
+    if (skip && gid >> 1 == ref >> 1)
+      continue;
+    cout << ' ';
+    if ((getVal(gid) & 1) ^ s ^ (gid & 1))
+      cout << '!';
+    cout << (gid >> 1);
+  }
+}
+
 void CirMgr::printFloatGates() const
 {
+  if (_moreFloat) {
+    findFloat();
+    _moreFloat = false;
+  }
   // output
   if (_floats[0].size()) {
     cout << "Gates with floating fanin(s):";
@@ -523,12 +539,34 @@ void CirMgr::printFloatGates() const
   }
 }
 
-void CirMgr::printVector(const IdList &v) const
+void CirMgr::findFloat() const
 {
-  for (const unsigned &i: v)
-    cout << " " << i;
-  cout << endl;
+  _floats[0].clear();
+  _floats[1].clear();
+  for (unsigned i=1; i<_gates.size(); ++i)
+    if (_gates[i] && _gates[i]->getType() != UNDEF_GATE) {
+      // float fanin
+      bool ok = true;
+      for (unsigned j=0; j<_gates[i]->fanInSize(); ++j) {
+        CirGate *now = getGate(_gates[i]->getFanin()[j] >> 1);
+        assert(now);
+        if (now->getType() == UNDEF_GATE)
+          ok = false;
+      }
+      if ((!ok || !_gates[i]->fanInSize()) &&
+          _gates[i]->getType() != PI_GATE)
+        _floats[0].push_back(i);
+
+      // float fanout
+      if (!_gates[i]->fanOutSize() &&
+          _gates[i]->getType() != PO_GATE)
+        _floats[1].push_back(i);
+    }
 }
+
+/**********************************************************/
+/*   class CirMgr member functions for circuit write      */
+/**********************************************************/
 
 void CirMgr::writeAag(ostream& outfile) const
 {
@@ -536,7 +574,7 @@ void CirMgr::writeAag(ostream& outfile) const
   CirGate::setVisitFlag();
   IdList v;
   for (unsigned i=0; i<MILOA[3]; ++i)
-      goFindAnd(MILOA[0] + i + 1, v);
+    goFindAnd(MILOA[0] + i + 1, v);
   // M
   outfile << "aag";
   IdList miloa(MILOA, MILOA+4);
@@ -552,7 +590,7 @@ void CirMgr::writeAag(ostream& outfile) const
   for (const unsigned &i: v) {
     outfile << i * 2;
     printVector(IdList(getGate(i)->getFanin(),
-                       getGate(i)->getFanin() + getGate(i)->fanInSize()));
+                       getGate(i)->getFanin() + 2));
   }
   // symbols
   for (unsigned i=0; i<_ins.size(); ++i) {
@@ -569,6 +607,44 @@ void CirMgr::writeAag(ostream& outfile) const
   outfile << "c\nAAG output by Chung-Yang (Ric) Huang\n";
 }
 
+void CirMgr::writeGate(ostream& outfile, CirGate *g) const
+{
+  ID out = g->getIndex();
+  // search A
+  CirGate::setVisitFlag();
+  IdList v_and, v_in;
+  goFindAnd(out, v_and);
+  // search I
+  for (ID i:_ins)
+    if (getGate(i)->isVisit())
+      v_in.push_back(i);
+
+  // M
+  outfile << "aag " << MILOA[0] << " "
+          << v_in.size() << " 0 1 "
+          << v_and.size() << endl;
+  // I
+  for (ID i: v_in)
+    outfile << i * 2 << endl;
+  // O
+  outfile << out * 2 << endl;
+  // A
+  for (const unsigned &i: v_and) {
+    outfile << i * 2;
+    printVector(IdList(getGate(i)->getFanin(),
+                       getGate(i)->getFanin() + 2));
+  }
+  // symbols
+  for (unsigned i=0; i<v_in.size(); ++i) {
+    CirGate *gate = getGate(v_in[i]);
+    if (gate->getName().size())
+      outfile << 'i' << i << " " << gate->getName() << endl;
+  }
+  outfile << "o0 " << out << endl
+  // comments. Use default for easier debugging
+          << "c\nWrite gate (" << out << ") by Chung-Yang (Ric) Huang\n";
+}
+
 void CirMgr::goFindAnd(unsigned id, IdList& v) const
 {
   CirGate *gate = getGate(id);
@@ -581,22 +657,45 @@ void CirMgr::goFindAnd(unsigned id, IdList& v) const
     v.push_back(id);
 }
 
+/* Gate operator */
+
 void CirMgr::delGate(ID& gid) {
   takeOutChild(getGate(gid)); // Need make sure
   delete _gates[gid];
   _gates[gid] = NULL;
 }
 
-void CirMgr::printFECPairs() const
-{
-  for (unsigned i=1; i<=_groupMax; ++i) {
-    cout << '[' << i - 1 << ']';
-    printVector2(_fecCollect[i], (getVal(_fecCollect[i][0]) & 1) ^ (_fecCollect[i][0]  & 1));
-    cout << endl;
+void CirMgr::takeOutChild(CirGate* gate) {
+  _moreFloat = true;
+  for (unsigned j=0; j<gate->fanInSize(); ++j) {
+    CirGate *gchild = getGate(gate->getFanin()[j] >> 1);
+    if (gchild)
+      static_cast<CirGateOut*>(gchild)->removeFanout((gate->getIndex() << 1) | (gate->getFanin()[j] & 1));
   }
 }
 
-// TODO
-void CirMgr::writeGate(ostream& outfile, CirGate *g) const
+// Be care for from is gate index , to is 2*ind | inv
+void CirMgr::merge(ID from, ID to)
 {
+  cout << mergeStr << ": " << (to >> 1)<< " merging "
+       << ((to & 1) ? "!" : "") << from << "...\n";
+  assert(from != (to >> 1)); // merge itself
+  CirGate *gateFrom = getGate(from),
+          *gateTo   = getGate(to >> 1);
+  ID inv = to & 1;
+
+  for (const ID &i: gateFrom->getFanout()) {
+    static_cast<CirGateOut*>(gateTo)->setFanout(i ^ inv);
+    CirGate* gate = getGate(i >> 1);
+    // dangerous cast, be care for
+    dynamic_cast<CirGateIn*>(gate)->updateFanin(from << 1, to);
+    // if      (gate->getType() == PO_GATE )
+    //   static_cast<GateOut*>(gate)->updateFanin(from << 1, to);
+    // else if (gate->getType() == AIG_GATE)
+    //   static_cast<GateAnd*>(gate)->updateFanin(from << 1, to);
+    // else
+    //   assert(false);
+  }
+
+  delGate(from);
 }

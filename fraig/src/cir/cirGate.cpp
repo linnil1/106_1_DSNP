@@ -87,6 +87,9 @@ void CirGate::goFanout (unsigned level, bool no) const
     cirMgr->getGate(i >> 1)->goFanout(level + 1, i & 1);
 }
 
+/**************************************/
+/*   useful                 functions */
+/**************************************/
 string CirGate::getTypeStr() const
 {
   switch (_type) {
@@ -141,12 +144,14 @@ bool GateAnd::operator == (const GateAnd& b) const {
   return (_fanin[ia] == b._fanin[ib]) && (_fanin[!ia] == b._fanin[!ib]);
 }
 
+/**************************************/
+/*   Simulation           functions   */
+/**************************************/
 void GateAnd::simulate() {
   _sim = cirMgr->getVal(_fanin[0]) &
          cirMgr->getVal(_fanin[1]);
 }
 
-// gateout
 void GateOut::simulate() {
   _sim = cirMgr->getVal(_fanin);
 }
