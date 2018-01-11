@@ -587,10 +587,16 @@ void CirMgr::delGate(ID& gid) {
   _gates[gid] = NULL;
 }
 
-// TODO
 void CirMgr::printFECPairs() const
 {
+  for (unsigned i=1; i<=_groupMax; ++i) {
+    cout << '[' << i - 1 << ']';
+    printVector2(_fecCollect[i], (getVal(_fecCollect[i][0]) & 1) ^ (_fecCollect[i][0]  & 1));
+    cout << endl;
+  }
 }
+
+// TODO
 void CirMgr::writeGate(ostream& outfile, CirGate *g) const
 {
 }

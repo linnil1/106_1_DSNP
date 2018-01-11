@@ -28,9 +28,10 @@ void CirGate::reportGate() const
        <<  "= " <<  getTypeStr() << "(" <<  _ind <<  ")";
   if (getName().size())
     cout << "\"" << getName() << "\"";
-  cout <<  ", line " << _line_no << endl
-       << "= FECs:\n"
-       << "= Value: ";
+  cout << ", line " << _line_no << endl
+       << "= FECs:";
+  cirMgr->printFEC(_ind);
+  cout << "\n= Value: ";
   for (int i=63; i>=0; --i) {
     cout << ((_sim >> i) & 1);
     if (i && !(i & 0x7))

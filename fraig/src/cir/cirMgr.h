@@ -43,6 +43,9 @@ public:
   Value getVal(ID id) {
     return getGate(id >> 1)->getSim() ^
                  ((id &  1) ? ULONG_MAX : 0); }
+  Value getVal(ID id) const {
+    return getGate(id >> 1)->getSim() ^
+                 ((id &  1) ? ULONG_MAX : 0); }
 
 
   // Member functions about circuit construction
@@ -59,7 +62,7 @@ public:
 
   // Member functions about fraig
   void strash();
-  void printFEC() const;
+  void printFEC(const ID) const;
   void fraig();
 
   // Member functions about circuit reporting
@@ -86,7 +89,8 @@ private:
   string mergeStr;
 
   // others
-  void printVector(const IdList &v) const;
+  void printVector(const IdList&) const;
+  void printVector2(const IdList&, bool, ID=UINT_MAX) const;
 
   // dfs
   void goNetlist(unsigned, unsigned&) const;
@@ -94,7 +98,11 @@ private:
   void goOptimize(ID);
   void goFindAnd(unsigned, IdList&) const;
   void goStrash(ID);
-  void goSim(ID);
+
+  // simulate
+  void simInit();
+  void simulate(int);
+  void collectFec();
 
   // var
   GateList          _gates;
@@ -104,6 +112,13 @@ private:
   stringstream      _comments;
   ofstream          *_simLog;
   HashSet<GateAnd*> _hash;
+
+  // simulate
+  bool              _simStart;
+  IdList            _listAnd;
+  IdList            _FECs;
+  unsigned          _groupMax;
+  vector<IdList>    _fecCollect;
 };
 
 #endif // CIR_MGR_H

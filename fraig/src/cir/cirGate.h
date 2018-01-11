@@ -28,7 +28,8 @@ class CirGate
 {
 public:
   CirGate(int type, ID& ind, unsigned& lineNo):
-    _type(type), _line_no(lineNo + 1), _ind(ind), _visited(0), _sim(0) {};
+    _type(type), _line_no(lineNo + 1), _ind(ind),
+    _fecID(0), _visited(0), _sim(0) {};
   virtual ~CirGate() {}
 
   // Basic access methods
@@ -61,12 +62,15 @@ public:
   // sim
   Value getSim() { return _sim; }
   virtual void simulate() {}
+  void setFec(unsigned g) { _fecID = g; }
+  unsigned getFec() { return _fecID; }
 
   // virtual void printGate() const {} // no used
 private:
   int              _type;
   unsigned         _line_no;
   ID               _ind;
+  unsigned         _fecID;
 
   // visit
   mutable unsigned _visited;
