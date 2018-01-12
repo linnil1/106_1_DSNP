@@ -35,7 +35,7 @@ class HashSet
 {
   typedef vector<Pdata> VDATA;
 public:
-  HashSet(size_t s=0) { init(s); }
+  HashSet(size_t s=0):_buckets(NULL) { init(s); }
   ~HashSet() { reset(); }
 
   void init(size_t s) {

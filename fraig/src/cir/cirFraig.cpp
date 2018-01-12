@@ -34,7 +34,7 @@ using namespace std;
 void CirMgr::strash()
 {
   mergeStr = "Strashing";
-  _hash.init(GateAnd::getNum() << 4);
+  _hash.init(GateAnd::getNum() << 2); // 4
   CirGate::setVisitFlag();
   for (unsigned i=0; i<MILOA[3]; ++i)
     goStrash(MILOA[0] + i + 1);

@@ -496,9 +496,11 @@ void CirMgr::printFECPairs() const
 
 void CirMgr::printFEC(const ID id) const
 {
-  if (!_simStart)
-    return ;
+  //if (!_simStart)
+  //  return ;
   CirGate *gate = getGate(id);
+  if (!gate->getFec())
+    return ;
   printVector2(_fecCollect[gate->getFec()], id * 2, true);
 }
 
@@ -677,7 +679,7 @@ void CirMgr::takeOutChild(CirGate* gate) {
 // Be care for from is gate index , to is 2*ind | inv
 void CirMgr::merge(ID from, ID to)
 {
-  cout << mergeStr << ": " << (to >> 1)<< " merging "
+  cout << mergeStr << ": " << (to >> 1) << " merging "
        << ((to & 1) ? "!" : "") << from << "...\n";
   assert(from != (to >> 1)); // merge itself
   CirGate *gateFrom = getGate(from),

@@ -29,6 +29,10 @@ public:
   CirMgr() {
     CirGate::resetVis(); // make sure (opt)
     GateAnd::resetNum(); // make sure (opt)
+    // cout << sizeof(CirGate) << endl;
+    // cout << sizeof(CirGateOut) << endl;
+    // cout << sizeof(GateIn) << endl;
+    _simStart = false;
   }
   ~CirMgr() {
     for (unsigned i=0; i<_gates.size(); ++i)
@@ -98,7 +102,7 @@ private:
 
   // simulate
   void simInit();
-  void simulate(int);
+  void simulate();
   void collectFec();
 
   // var

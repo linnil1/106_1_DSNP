@@ -11,6 +11,7 @@
 
 #include <string>
 #include <iostream>
+#include <algorithm>
 #include "cirDef.h"
 #include "sat.h"
 
@@ -18,7 +19,7 @@ using namespace std;
 
 class CirGate;
 
-const static IdSet null_idset;
+const static IdList null_idset;
 const static string null_str;
 
 //------------------------------------------------------------------------
@@ -47,7 +48,7 @@ public:
   // fanin fanout
   virtual unsigned fanInSize() const { return 0; }
   virtual const ID* getFanin() const { return NULL; }
-  virtual const IdSet& getFanout() const { return null_idset; }
+  virtual const IdList& getFanout() const { return null_idset; }
   virtual unsigned fanOutSize() const { return 0; }
 
   // visit
@@ -91,13 +92,19 @@ public:
   CirGateOut(int type=0, ID ind=0, unsigned lineNo=0)
     :CirGate(type, ind, lineNo) {};
   ~CirGateOut() {};
-  void setFanout(ID num) { _fanout.insert(num); }
-  const IdSet& getFanout() const { return _fanout; }
-  void removeFanout(ID gid) { _fanout.erase(gid); }
+  void setFanout(ID num) { _fanout.push_back(num); }
+  const IdList& getFanout() const { return _fanout; }
+  void removeFanout(ID gid) {
+    auto it = std::find(_fanout.begin(), _fanout.end(), gid);
+    while (it != _fanout.end()) {
+        it = _fanout.erase(it);
+        it = find(it, _fanout.end(), gid);
+    }
+  }
   unsigned fanOutSize() const { return _fanout.size(); }
 
 private:
-  IdSet _fanout;
+  IdList _fanout;
 };
 
 class CirGateName
