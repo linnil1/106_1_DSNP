@@ -2,7 +2,6 @@ _fraig/include/
 _fraig/Makefile
 _fraig/src/util/myHashMap.h
 _fraig/src/util/myHashSet.h
-_fraig/src/util/make.util
 _fraig/src/cir/make.cir
 _fraig/src/cir/cirCmd.cpp
 _fraig/src/cir/cirFraig.cpp

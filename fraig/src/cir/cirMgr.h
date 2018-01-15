@@ -102,7 +102,7 @@ private:
 
   // simulate
   void simInit();
-  void simulate();
+  void simulate(int);
   void collectFec();
 
   // var

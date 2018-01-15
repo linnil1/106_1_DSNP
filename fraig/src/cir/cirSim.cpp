@@ -42,7 +42,7 @@ void CirMgr::randomSim()
         Value(my_random()) << 62 |
         Value(my_random()) << 31 |
         Value(my_random()));
-    simulate();
+    simulate(64);
   }
   cout << n << " patterns simulated.\n";
   collectFec();
@@ -93,7 +93,7 @@ void CirMgr::fileSim(ifstream& patternFile)
         static_cast<GateIn*>(getGate(_ins[i]))->setSim(sim[i]);
         sim[i] = 0;
       }
-      simulate();
+      simulate(n & 63 ? n & 63 : 64);
     }
   }
   cout << "\r" << n << " patterns simulated.\n";
@@ -116,11 +116,24 @@ void CirMgr::simInit()
   _simStart = true;
 }
 
-void CirMgr::simulate()
+void CirMgr::simulate(int n)
 {
   // simulate
   for (ID &i: _listAnd)
     getGate(i)->simulate();
+  // write in log if needed
+  if (_simLog)
+    for (int i=0; i<n; ++i) {
+      for (ID &id: _ins)
+        *_simLog << ((getGate(id)->getSim() >> i) & 1);
+      *_simLog << ' ';
+      for (ID &id: _outs) {
+        // simulate PO
+        getGate(id)->simulate();
+        *_simLog << ((getGate(id)->getSim() >> i) & 1);
+      }
+      *_simLog << '\n';
+    }
 
   // init fec if first time use
   if (!_FECs.size()) {
@@ -161,8 +174,9 @@ void CirMgr::simulate()
 void CirMgr::collectFec()
 {
   // simulate PO
-  for (unsigned i=0; i<MILOA[3]; ++i)
-    getGate(MILOA[0] + i + 1)->simulate();
+  if (!_simLog)
+    for (ID &id: _outs)
+      getGate(id)->simulate();
   // collect
   _fecCollect = vector<IdList>(_groupMax + 1);
   for (ID &i: _FECs) {
