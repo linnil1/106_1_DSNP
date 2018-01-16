@@ -36,8 +36,8 @@ void CirMgr::strash()
   mergeStr = "Strashing";
   _hash.init(GateAnd::getNum() << 2); // 4
   CirGate::setVisitFlag();
-  for (unsigned i=0; i<MILOA[3]; ++i)
-    goStrash(MILOA[0] + i + 1);
+  for (ID &i: _outs)
+    goStrash(i);
   _hash.reset();
 }
 
@@ -78,7 +78,7 @@ void CirMgr::fraig()
   // full fraig
   _groupMax = 0;
   _fecCollect.clear();
-  for (ID &id:_FECs)
+  for (DID &id:_FECs)
     if (getGate(id >> 1))
       getGate(id >> 1)->setFec(0);
   _FECs.resize(1);
@@ -118,14 +118,14 @@ void CirMgr::goFraig(ID id)
 
   // strash
   GateAnd *gateAnd = static_cast<GateAnd*>(gate);
-  ID *to = _hashMap.insert(gateAnd, id << 1);
+  DID *to = _hashMap.insert(gateAnd, id << 1);
   if (to) {
     merge(id, *to);
     return ;
   }
 
   // fraig
-  unsigned g = gate->getFec();
+  ID g = gate->getFec();
   IdList &v = _fecNow[g];
   for (ID &i: v) {
     cout << "Proof : " << i << ' ' << id << endl;

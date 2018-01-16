@@ -405,7 +405,7 @@ bool CirMgr::readCircuit(const string& fileName)
   for (unsigned i=0; i<_gates.size(); ++i)
     if (_gates[i] && _gates[i]->fanInSize())
       for (unsigned j=0; j<_gates[i]->fanInSize(); ++j) {
-        ID k = _gates[i]->getFanin()[j];
+        DID k = _gates[i]->getFanin()[j];
         if (!getGate(k >> 1)) // add undef
           _gates[k >> 1] = new GateUndef(k >> 1);
         static_cast<CirGateOut*>(getGate(k >> 1))->setFanout((i << 1) + (k & 1));
@@ -444,11 +444,11 @@ void CirMgr::printNetlist() const
   CirGate::setVisitFlag();
   cout << endl;
   unsigned num = 0;
-  for (unsigned i=0; i<MILOA[3]; ++i)
-      goNetlist(MILOA[0] + i + 1, num);
+  for (const ID& id: _outs)
+    goNetlist(id, num);
 }
 
-void CirMgr::goNetlist(unsigned id, unsigned& num) const
+void CirMgr::goNetlist(ID id, unsigned& num) const
 {
   CirGate *gate = getGate(id);
   assert(gate);
@@ -460,7 +460,7 @@ void CirMgr::goNetlist(unsigned id, unsigned& num) const
        << setw(4) << left << gate->getTypeStr() << id;
   for (unsigned i=0; i<gate->fanInSize(); ++i) {
     cout << ' ';
-    ID gid = gate->getFanin()[i];
+    DID gid = gate->getFanin()[i];
     CirGate *gchild = cirMgr->getGate(gid >> 1);
     if (!gchild || gchild->getType() == UNDEF_GATE)
       cout << '*';
@@ -511,10 +511,10 @@ void CirMgr::printVector(const IdList &v) const
   cout << endl;
 }
 
-void CirMgr::printVector2(const IdList &v, ID ref, bool skip/*=false*/) const
+void CirMgr::printVector2(const DIdList &v, DID ref, bool skip/*=false*/) const
 {
   bool s = getVal(ref) & 1;
-  for (const unsigned& gid:v) {
+  for (const DID& gid:v) {
     if (skip && gid >> 1 == ref >> 1)
       continue;
     cout << ' ';
@@ -575,21 +575,21 @@ void CirMgr::writeAag(ostream& outfile) const
   // search A
   CirGate::setVisitFlag();
   IdList v;
-  for (unsigned i=0; i<MILOA[3]; ++i)
-    goFindAnd(MILOA[0] + i + 1, v);
+  for (const ID &id: _outs)
+    goFindAnd(id, v);
   // M
   outfile << "aag";
   for (int i=0; i<4; ++i)
     outfile << ' ' << MILOA[i];
   outfile << ' ' << v.size() << endl;
   // I
-  for (const unsigned &i: _ins)
+  for (const ID &i: _ins)
     outfile << i * 2 << endl;
   // O
-  for (const unsigned &i: _outs)
+  for (const ID &i: _outs)
     outfile << *(getGate(i)->getFanin()) << endl;
   // A
-  for (const unsigned &i: v) {
+  for (const ID &i: v) {
     outfile << i * 2 << " "
             << getGate(i)->getFanin()[0] << " "
             << getGate(i)->getFanin()[1] << endl;
@@ -617,7 +617,7 @@ void CirMgr::writeGate(ostream& outfile, CirGate *g) const
   IdList v_and, v_in;
   goFindAnd(out, v_and);
   // search I
-  for (ID i:_ins)
+  for (const ID &i:_ins)
     if (getGate(i)->isVisit())
       v_in.push_back(i);
 
@@ -626,12 +626,12 @@ void CirMgr::writeGate(ostream& outfile, CirGate *g) const
           << v_in.size() << " 0 1 "
           << v_and.size() << endl;
   // I
-  for (ID i: v_in)
+  for (const ID &i: v_in)
     outfile << i * 2 << endl;
   // O
   outfile << out * 2 << endl;
   // A
-  for (const unsigned &i: v_and) {
+  for (const ID &i: v_and) {
     outfile << i * 2 << " "
             << getGate(i)->getFanin()[0] << " "
             << getGate(i)->getFanin()[1] << endl;
@@ -677,7 +677,7 @@ void CirMgr::takeOutChild(CirGate* gate) {
 }
 
 // Be care for from is gate index , to is 2*ind | inv
-void CirMgr::merge(ID from, ID to)
+void CirMgr::merge(ID from, DID to)
 {
   cout << mergeStr << ": " << (to >> 1) << " merging "
        << ((to & 1) ? "!" : "") << from << "...\n";
@@ -686,7 +686,7 @@ void CirMgr::merge(ID from, ID to)
           *gateTo   = getGate(to >> 1);
   ID inv = to & 1;
 
-  for (const ID &i: gateFrom->getFanout()) {
+  for (const DID &i: gateFrom->getFanout()) {
     static_cast<CirGateOut*>(gateTo)->setFanout(i ^ inv);
     CirGate* gate = getGate(i >> 1);
     // dangerous cast, be care for

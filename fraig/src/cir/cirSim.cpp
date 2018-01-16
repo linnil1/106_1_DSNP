@@ -110,9 +110,9 @@ void CirMgr::simInit()
   if (_simStart == 0) {
     CirGate::setVisitFlag();
     _listAnd = IdList();
-    _FECs = IdList();
-    for (unsigned i=0; i<MILOA[3]; ++i)
-      goFindAnd(MILOA[0] + i + 1, _listAnd);
+    _FECs = DIdList();
+    for (ID &i: _outs)
+      goFindAnd(i, _listAnd);
   }
   if (_simStart == 1) {
     CirGate::setVisitFlag();
@@ -146,20 +146,20 @@ void CirMgr::simulate(int n)
     _FECs = _listAnd;
     _FECs.push_back(0);
     sort(_FECs.begin(), _FECs.end());
-    for (ID &i: _FECs)
+    for (DID &i: _FECs) // ID to DID
       i = (i << 1) | (getVal(i << 1) & 1);
   }
 
   // regroup fec
-  typedef pair<unsigned, Value> PV; // orignal group, new group
-  map<PV, pair<unsigned, unsigned> > m; // size, groupId
+  typedef pair<DID, Value> PV; // orignal group, new group
+  map<PV, pair<unsigned, DID> > m; // size, groupId
   //// classify and count
-  for (ID &i: _FECs)
+  for (DID &i: _FECs)
     ++m[PV(getGate(i >> 1)->getFec(), getVal(i))].first;
 
   //// change groupID for each AIG
   unsigned ri = _groupMax = 0;
-  for (ID &i: _FECs) {
+  for (DID &i: _FECs) {
     // remove separated fec
     unsigned s = m[PV(getGate(i >> 1)->getFec(), getVal(i))].first;
     if (s <= 1) {
@@ -184,8 +184,8 @@ void CirMgr::collectFec()
     for (ID &id: _outs)
       getGate(id)->simulate();
   // collect
-  _fecCollect = vector<IdList>(_groupMax + 1);
-  for (ID &i: _FECs) {
+  _fecCollect = vector<DIdList>(_groupMax + 1);
+  for (DID &i: _FECs) {
     unsigned g = getGate(i >> 1)->getFec();
     _fecCollect[g].push_back(i);
   }

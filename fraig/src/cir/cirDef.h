@@ -21,10 +21,11 @@ class CirGate;
 class CirMgr;
 class SatSolver;
 
-typedef unsigned         ID;
 typedef vector<CirGate*> GateList;
+typedef unsigned         ID;
+typedef unsigned         DID;
 typedef vector<ID>       IdList;
-typedef set<ID>          IdSet;
+typedef vector<DID>      DIdList;
 typedef unsigned long    Value;
 
 enum GateType

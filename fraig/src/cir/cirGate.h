@@ -47,8 +47,8 @@ public:
 
   // fanin fanout
   virtual unsigned fanInSize() const { return 0; }
-  virtual const ID* getFanin() const { return NULL; }
-  virtual const IdList& getFanout() const { return null_idset; }
+  virtual const DID* getFanin() const { return NULL; }
+  virtual const DIdList& getFanout() const { return null_idset; }
   virtual unsigned fanOutSize() const { return 0; }
 
   // visit
@@ -63,8 +63,8 @@ public:
   // sim
   Value getSim() { return _sim; }
   virtual void simulate() {}
-  void setFec(unsigned g) { _fecID = g; }
-  unsigned getFec() { return _fecID; }
+  void setFec(ID g) { _fecID = g; }
+  ID getFec() { return _fecID; }
 
   // sat
   Var getSatVar() const { return _satVar; }
@@ -75,7 +75,7 @@ private:
   int              _type;
   unsigned         _line_no;
   ID               _ind;
-  unsigned         _fecID;
+  ID               _fecID;
   Var              _satVar;
 
   // visit
@@ -84,8 +84,8 @@ private:
   static unsigned  _visited_flag;
 
   // report gate by dfs
-  void goFanin (ID, bool) const;
-  void goFanout(ID, bool) const;
+  void goFanin (unsigned, bool) const;
+  void goFanout(unsigned, bool) const;
 
 protected:
   Value            _sim;
@@ -97,9 +97,9 @@ public:
   CirGateOut(int type=0, ID ind=0, unsigned lineNo=0)
     :CirGate(type, ind, lineNo) {};
   ~CirGateOut() {};
-  void setFanout(ID num) { _fanout.push_back(num); }
+  void setFanout(DID num) { _fanout.push_back(num); }
   const IdList& getFanout() const { return _fanout; }
-  void removeFanout(ID gid) {
+  void removeFanout(DID gid) {
     auto it = std::find(_fanout.begin(), _fanout.end(), gid);
     while (it != _fanout.end()) {
         it = _fanout.erase(it);
@@ -128,10 +128,10 @@ class CirGateIn
 public:
   CirGateIn() {};
   ~CirGateIn() {};
-  void setFanin (ID* num);
-  void updateFanin(ID from, ID to);
+  void setFanin (DID* num);
+  void updateFanin(DID from, DID to);
   virtual unsigned fanInSize() const = 0;
-  virtual const ID* getFanin() const = 0;
+  virtual const DID* getFanin() const = 0;
 };
 
 // Five type of AIG
@@ -176,13 +176,13 @@ public:
   void setName(string &s) { CirGateName::setName(s); }
 
   // virtual
-  const ID* getFanin () const { return &_fanin; }
+  const DID* getFanin () const { return &_fanin; }
   unsigned fanInSize() const { return 1; }
 
   // sim
   void simulate();
 private:
-  ID _fanin;
+  DID _fanin;
 };
 
 class GateAnd: public CirGateOut, public CirGateIn
@@ -193,7 +193,7 @@ public:
   ~GateAnd() { --_num; };
 
   // virtual
-  const ID* getFanin() const { return _fanin; }
+  const DID* getFanin() const { return _fanin; }
   unsigned fanInSize() const { return 2; }
 
   // hash
@@ -208,7 +208,7 @@ public:
   void simulate();
 private:
   static unsigned _num;
-  ID _fanin[2];
+  DID _fanin[2];
 };
 
 #endif // CIR_GATE_H

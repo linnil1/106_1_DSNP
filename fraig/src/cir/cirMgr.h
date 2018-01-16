@@ -32,6 +32,8 @@ public:
     // cout << sizeof(CirGate) << endl;
     // cout << sizeof(CirGateOut) << endl;
     // cout << sizeof(GateIn) << endl;
+    // cout << sizeof(GateOut) << endl;
+    // cout << sizeof(GateAnd) << endl;
     _simStart = 0;
   }
   ~CirMgr() {
@@ -44,9 +46,9 @@ public:
   // return '0' if "gid" corresponds to an undefined gate.
   CirGate* getGate(ID gid) const { return _gates[gid]; }
   void delGate(ID&);
-  Value getVal(ID id) const {
-    return getGate(id >> 1)->getSim() ^
-                 ((id &  1) ? ULONG_MAX : 0); }
+  Value getVal(DID did) const {
+    return getGate(did >> 1)->getSim() ^
+                 ((did &  1) ? ULONG_MAX : 0); }
   void printFEC(const ID) const;
 
 
@@ -86,15 +88,15 @@ private:
   // gate Operator
   void findFloat() const;
   void takeOutChild(CirGate*);
-  void merge(ID, ID); // real, with-inverse
+  void merge(ID, DID); // real, with-inverse
   string mergeStr;
 
   // others
   void printVector(const IdList&) const;
-  void printVector2(const IdList&, ID, bool=false) const;
+  void printVector2(const DIdList&, DID, bool=false) const;
 
   // dfs
-  void goNetlist(unsigned, unsigned&) const;
+  void goNetlist(ID, unsigned&) const;
   void goSweep(ID);
   void goOptimize(ID);
   void goFindAnd(unsigned, IdList&) const;
@@ -119,16 +121,16 @@ private:
   mutable bool          _moreFloat;
 
   // simulate
-  char                  _simStart;
+  int                   _simStart;
   IdList                _listAnd;
-  IdList                _FECs;
+  DIdList               _FECs;
   unsigned              _groupMax;
-  vector<IdList>        _fecCollect;
+  vector<DIdList>       _fecCollect;
 
   // fraig
   SatSolver             _solver;
   vector<IdList>        _fecNow;
-  HashMap<GateAnd*, ID> _hashMap;
+  HashMap<GateAnd*,DID> _hashMap;
 };
 
 #endif // CIR_MGR_H

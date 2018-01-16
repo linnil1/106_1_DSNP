@@ -32,8 +32,8 @@ void CirMgr::sweep()
 {
   // main sweep
   CirGate::setVisitFlag();
-  for (unsigned i=0; i<MILOA[3]; ++i)
-    goSweep(MILOA[0] + i + 1);
+  for (ID &i: _outs)
+    goSweep(i);
   for (unsigned i=1; i<=MILOA[0]; ++i) {
     CirGate *gate = getGate(i);
     if (gate && gate->getType() != PI_GATE && gate->getType() != PO_GATE && !gate->isVisit()) {
@@ -63,8 +63,8 @@ void CirMgr::optimize()
 {
   mergeStr = "Simplifying";
   CirGate::setVisitFlag();
-  for (unsigned i=0; i<MILOA[3]; ++i)
-    goOptimize(MILOA[0] + i + 1);
+  for (ID &i: _outs)
+    goOptimize(i);
 }
 
 void CirMgr::goOptimize(ID id)

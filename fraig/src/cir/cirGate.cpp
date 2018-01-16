@@ -119,15 +119,15 @@ bool CirGate::isVisit() const
 /**************************************/
 /*   class CirGateIn member functions */
 /**************************************/
-void CirGateIn::setFanin (ID* num) {
+void CirGateIn::setFanin (DID* num) {
   for (unsigned i=0; i<fanInSize(); ++i)
-    const_cast<ID*>(getFanin())[i] = num[i];
+    const_cast<DID*>(getFanin())[i] = num[i];
 }
 
-void CirGateIn::updateFanin(ID from, ID to) {
+void CirGateIn::updateFanin(DID from, DID to) {
   for (unsigned i=0; i<fanInSize(); ++i)
     if ((getFanin()[i] ^ from) <= 1)
-      const_cast<ID*>(getFanin())[i] = to ^ (getFanin()[i] & 1);
+      const_cast<DID*>(getFanin())[i] = to ^ (getFanin()[i] & 1);
 }
 
 /**************************************/
