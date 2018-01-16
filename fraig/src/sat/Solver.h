@@ -124,28 +124,28 @@ protected:
 
 public:
   Solver() : ok               (true)
-      , cla_inc          (1)
-      , cla_decay        (1)
-      , var_inc          (1)
-      , var_decay        (1)
-      , order            (assigns, activity)
-      , qhead            (0)
-      , simpDB_assigns   (0)
-      , simpDB_props     (0)
-      , default_params   (SearchParams(0.95, 0.999, 0.02))
-      , expensive_ccmin  (2)
-      , proof            (NULL)
-      , verbosity        (0)
-      , progress_estimate(0)
-      , conflict_id      (ClauseId_NULL)
-      {
-        vec<Lit> dummy(2,lit_Undef);
-        propagate_tmpbin = Clause_new(false, dummy);
-        analyze_tmpbin   = Clause_new(false, dummy);
-        addUnit_tmp   .growTo(1);
-        addBinary_tmp .growTo(2);
-        addTernary_tmp.growTo(3);
-      }
+           , cla_inc          (1)
+           , cla_decay        (1)
+           , var_inc          (1)
+           , var_decay        (1)
+           , order            (assigns, activity)
+           , qhead            (0)
+           , simpDB_assigns   (0)
+           , simpDB_props     (0)
+           , default_params   (SearchParams(0.95, 0.999, 0.02))
+           , expensive_ccmin  (2)
+           , proof            (NULL)
+           , verbosity        (0)
+           , progress_estimate(0)
+           , conflict_id      (ClauseId_NULL)
+    {
+      vec<Lit> dummy(2,lit_Undef);
+      propagate_tmpbin = Clause_new(false, dummy);
+      analyze_tmpbin   = Clause_new(false, dummy);
+      addUnit_tmp   .growTo(1);
+      addBinary_tmp .growTo(2);
+      addTernary_tmp.growTo(3);
+    }
 
   ~Solver() {
     for (int i = 0; i < learnts.size(); i++) remove(learnts[i], true);

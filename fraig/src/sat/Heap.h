@@ -39,9 +39,9 @@ class Heap {
     {
       int x = heap[i];
       while (parent(i) != 0 && comp(x,heap[parent(i)])){
-          heap[i]          = heap[parent(i)];
-          indices[heap[i]] = i;
-          i                = parent(i);
+        heap[i]          = heap[parent(i)];
+        indices[heap[i]] = i;
+        i                = parent(i);
       }
       heap   [i] = x;
       indices[x] = i;
@@ -51,11 +51,11 @@ class Heap {
     {
       int x = heap[i];
       while (left(i) < heap.size()){
-          int child = right(i) < heap.size() && comp(heap[right(i)],heap[left(i)]) ? right(i) : left(i);
-          if (!comp(heap[child],x)) break;
-          heap[i]          = heap[child];
-          indices[heap[i]] = i;
-          i                = child;
+        int child = right(i) < heap.size() && comp(heap[right(i)],heap[left(i)]) ? right(i) : left(i);
+        if (!comp(heap[child],x)) break;
+        heap[i]          = heap[child];
+        indices[heap[i]] = i;
+        i                = child;
       }
       heap   [i] = x;
       indices[x] = i;
@@ -84,7 +84,7 @@ class Heap {
       indices[r]       = 0;
       heap.pop();
       if (heap.size() > 1)
-          percolateDown(1);
+        percolateDown(1);
       return r; }
 
     bool heapProperty() {

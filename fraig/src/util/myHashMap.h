@@ -13,8 +13,6 @@
 
 using namespace std;
 
-// TODO: (Optionally) Implement your own HashMap and Cache classes.
-
 //-----------------------
 // Define HashMap classes
 //-----------------------
@@ -37,87 +35,46 @@ template <class HashKey, class HashData>
 class HashMap
 {
 typedef pair<HashKey, HashData> HashNode;
+typedef vector<HashNode> VHashNode;
 
 public:
-  HashMap(size_t b=0) : _numBuckets(0), _buckets(0) { if (b != 0) init(b); }
+  HashMap(size_t b=0) : _numBuckets(0), _buckets(NULL) { if (b != 0) init(b); }
   ~HashMap() { reset(); }
 
-  // [Optional] TODO: implement the HashMap<HashKey, HashData>::iterator
-  // o An iterator should be able to go through all the valid HashNodes
-  //   in the HashMap
-  // o Functions to be implemented:
-  //   - constructor(s), destructor
-  //   - operator '*': return the HashNode
-  //   - ++/--iterator, iterator++/--
-  //   - operators '=', '==', !="
-  //
-  class iterator
-  {
-    friend class HashMap<HashKey, HashData>;
-
-  public:
-
-  private:
-  };
-
   void init(size_t b) {
-    reset(); _numBuckets = b; _buckets = new vector<HashNode>[b]; }
+    reset();
+    _numBuckets = b;
+    _buckets = new VHashNode[b];
+  }
+
   void reset() {
     _numBuckets = 0;
-    if (_buckets) { delete [] _buckets; _buckets = 0; }
+    if (_buckets) {
+      delete [] _buckets;
+      _buckets = NULL;
+    }
   }
-  void clear() {
-    for (size_t i = 0; i < _numBuckets; ++i) _buckets[i].clear();
+
+  // little modified from hashSet
+  HashData* insert(const HashKey& k, const HashData& d) {
+    VHashNode &v = _buckets[bucketNum(k)];
+    typename VHashNode::iterator it = find_if(v.begin(), v.end(),
+      [&](HashNode& p) { return *(p.first) == *k; });
+    if (it != v.end())
+      return &it->second;
+    v.push_back(HashNode(k, d));
+    return NULL;
   }
-  size_t numBuckets() const { return _numBuckets; }
-
-  vector<HashNode>& operator [] (size_t i) { return _buckets[i]; }
-  const vector<HashNode>& operator [](size_t i) const { return _buckets[i]; }
-
-  // TODO: implement these functions
-  //
-  // Point to the first valid data
-  iterator begin() const { return iterator(); }
-  // Pass the end
-  iterator end() const { return iterator(); }
-  // return true if no valid data
-  bool empty() const { return true; }
-  // number of valid data
-  size_t size() const { size_t s = 0; return s; }
-
-  // check if k is in the hash...
-  // if yes, return true;
-  // else return false;
-  bool check(const HashKey& k) const { return false; }
-
-  // query if k is in the hash...
-  // if yes, replace d with the data in the hash and return true;
-  // else return false;
-  bool query(const HashKey& k, HashData& d) const { return false; }
-
-  // update the entry in hash that is equal to k (i.e. == return true)
-  // if found, update that entry with d and return true;
-  // else insert d into hash as a new entry and return false;
-  bool update(const HashKey& k, HashData& d) { return false; }
-
-  // return true if inserted d successfully (i.e. k is not in the hash)
-  // return false is k is already in the hash ==> will not insert
-  bool insert(const HashKey& k, const HashData& d) { return true; }
-
-  // return true if removed successfully (i.e. k is in the hash)
-  // return fasle otherwise (i.e. nothing is removed)
-  bool remove(const HashKey& k) { return false; }
 
 private:
-  // Do not add any extra data member
   size_t                   _numBuckets;
-  vector<HashNode>*        _buckets;
+  VHashNode*               _buckets;
 
-  size_t bucketNum(const HashKey& k) const {
-    return (k() % _numBuckets); }
-
+  size_t bucketNum(const HashKey& k) const { return ((*k)() % _numBuckets); }
 };
 
+
+// TODO: (Optionally) Implement your own Cache classes.
 
 //---------------------
 // Define Cache classes
