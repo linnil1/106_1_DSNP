@@ -30,6 +30,7 @@ using namespace std;
 // UNDEF, float and unused list may be changed
 void CirMgr::sweep()
 {
+  // main sweep
   CirGate::setVisitFlag();
   for (unsigned i=0; i<MILOA[3]; ++i)
     goSweep(MILOA[0] + i + 1);
@@ -39,8 +40,10 @@ void CirMgr::sweep()
       cout << "Sweeping: " << gate->getTypeStr()
            << '(' << i << ") removed..." << endl;
       delGate(i);
+      // _moreFloat = true;
     }
   }
+  _floats[1].clear();
 }
 
 void CirMgr::goSweep(ID id)

@@ -32,7 +32,7 @@ public:
     // cout << sizeof(CirGate) << endl;
     // cout << sizeof(CirGateOut) << endl;
     // cout << sizeof(GateIn) << endl;
-    _simStart = false;
+    _simStart = 0;
   }
   ~CirMgr() {
     for (unsigned i=0; i<_gates.size(); ++i)
@@ -99,6 +99,7 @@ private:
   void goOptimize(ID);
   void goFindAnd(unsigned, IdList&) const;
   void goStrash(ID);
+  void goFraig(ID);
 
   // simulate
   void simInit();
@@ -106,23 +107,28 @@ private:
   void collectFec();
 
   // var
-  GateList          _gates;
-  unsigned          MILOA[5];
-  IdList            _ins, _outs;
-  stringstream      _comments;
-  ofstream          *_simLog;
-  HashSet<GateAnd*> _hash;
+  GateList              _gates;
+  unsigned              MILOA[5];
+  IdList                _ins, _outs;
+  stringstream          _comments;
+  ofstream              *_simLog;
+  HashSet<GateAnd*>     _hash;
 
   // float
-  mutable IdList    _floats[2];
-  mutable bool      _moreFloat;
+  mutable IdList        _floats[2];
+  mutable bool          _moreFloat;
 
   // simulate
-  bool              _simStart;
-  IdList            _listAnd;
-  IdList            _FECs;
-  unsigned          _groupMax;
-  vector<IdList>    _fecCollect;
+  char                  _simStart;
+  IdList                _listAnd;
+  IdList                _FECs;
+  unsigned              _groupMax;
+  vector<IdList>        _fecCollect;
+
+  // fraig
+  SatSolver             _solver;
+  vector<IdList>        _fecNow;
+  HashMap<GateAnd*, ID> _hashMap;
 };
 
 #endif // CIR_MGR_H

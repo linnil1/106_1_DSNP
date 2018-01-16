@@ -106,14 +106,19 @@ void CirMgr::fileSim(ifstream& patternFile)
 /*************************************************/
 void CirMgr::simInit()
 {
-  if (!_simStart) {
+  // _simStart = 0(uninit), 1(after fraig), 2(ok)
+  if (_simStart == 0) {
     CirGate::setVisitFlag();
     _listAnd = IdList();
     _FECs = IdList();
     for (unsigned i=0; i<MILOA[3]; ++i)
       goFindAnd(MILOA[0] + i + 1, _listAnd);
   }
-  _simStart = true;
+  if (_simStart == 1) {
+    CirGate::setVisitFlag();
+    _listAnd = IdList();
+  }
+  _simStart = 2;
 }
 
 void CirMgr::simulate(int n)
@@ -136,6 +141,7 @@ void CirMgr::simulate(int n)
     }
 
   // init fec if first time use
+  // fec will has at least 0 in it
   if (!_FECs.size()) {
     _FECs = _listAnd;
     _FECs.push_back(0);

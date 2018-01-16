@@ -66,12 +66,17 @@ public:
   void setFec(unsigned g) { _fecID = g; }
   unsigned getFec() { return _fecID; }
 
+  // sat
+  Var getSatVar() const { return _satVar; }
+  void setSatVar(const Var& v) { _satVar = v; }
+
   // virtual void printGate() const {} // no used
 private:
   int              _type;
   unsigned         _line_no;
   ID               _ind;
   unsigned         _fecID;
+  Var              _satVar;
 
   // visit
   mutable unsigned _visited;

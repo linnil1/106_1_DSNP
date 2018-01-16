@@ -579,20 +579,20 @@ void CirMgr::writeAag(ostream& outfile) const
     goFindAnd(MILOA[0] + i + 1, v);
   // M
   outfile << "aag";
-  IdList miloa(MILOA, MILOA+4);
-  miloa.push_back(v.size());
-  printVector(miloa);
+  for (int i=0; i<4; ++i)
+    outfile << ' ' << MILOA[i];
+  outfile << ' ' << v.size() << endl;
   // I
   for (const unsigned &i: _ins)
     outfile << i * 2 << endl;
   // O
   for (const unsigned &i: _outs)
-    cout << *(getGate(i)->getFanin()) << endl;
+    outfile << *(getGate(i)->getFanin()) << endl;
   // A
   for (const unsigned &i: v) {
-    outfile << i * 2;
-    printVector(IdList(getGate(i)->getFanin(),
-                       getGate(i)->getFanin() + 2));
+    outfile << i * 2 << " "
+            << getGate(i)->getFanin()[0] << " "
+            << getGate(i)->getFanin()[1] << endl;
   }
   // symbols
   for (unsigned i=0; i<_ins.size(); ++i) {
@@ -632,9 +632,9 @@ void CirMgr::writeGate(ostream& outfile, CirGate *g) const
   outfile << out * 2 << endl;
   // A
   for (const unsigned &i: v_and) {
-    outfile << i * 2;
-    printVector(IdList(getGate(i)->getFanin(),
-                       getGate(i)->getFanin() + 2));
+    outfile << i * 2 << " "
+            << getGate(i)->getFanin()[0] << " "
+            << getGate(i)->getFanin()[1] << endl;
   }
   // symbols
   for (unsigned i=0; i<v_in.size(); ++i) {
