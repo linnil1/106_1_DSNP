@@ -309,7 +309,6 @@ bool CirMgr::readCircuit(const string& fileName)
       isnotGate(ss, ind);
       isnotGate(ss, in[0], false);
       isnotGate(ss, in[1], false);
-      cout << in[0] << in[1] << endl;;
       hasMore(ss);
       // A add AIG
       _gates[ind >> 1] = new GateAnd(ind >> 1, lineNo);

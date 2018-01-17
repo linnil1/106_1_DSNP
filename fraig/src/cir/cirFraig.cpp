@@ -132,7 +132,6 @@ void CirMgr::goFraig(ID id)
   }
 
   gate->setSatVar(_solver.newVar());
-  cout << id << ' ' << gate->getFanin()[0] << ' ' << gate->getFanin()[1] << endl;
   _solver.addAigCNF(gate->getSatVar(),
                     getGate(gate->getFanin()[0] >> 1)->getSatVar(),
                     gate->getFanin()[0] & 1,

@@ -14,3 +14,4 @@ _fraig/src/cir/cirMgr.h
 _fraig/src/cir/cirDef.h
 _fraig/src/cir/cirGate.h
 _fraig/src/cir/cirOpt.cpp
+_fraig/B04611017.pdf
