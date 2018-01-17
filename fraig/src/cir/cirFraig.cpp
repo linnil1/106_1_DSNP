@@ -62,21 +62,28 @@ void CirMgr::fraig()
 {
   if (!_groupMax)
     return;
+  // init
   CirGate::setVisitFlag();
   mergeStr = "Fraig";
   _hashMap.init(GateAnd::getNum() << 2); // 4
+
+  // build sat
   _solver.initialize();
-  _fecNow = vector<IdList>(_groupMax + 1);
-  _fecNow[1].push_back(0);
   for (ID &id: _ins)
     getGate(id)->setSatVar(_solver.newVar());
   getGate(0)->setSatVar(_solver.newVar());
+
+  // fec group
+  _fecNow = vector<IdList>(_groupMax + 1);
+  _fecNow[1].push_back(0);
+
+  // dfs
   for (ID &id: _outs)
     goFraig(id);
-  _hashMap.reset();
 
   // full fraig
   _groupMax = 0;
+  _hashMap.reset();
   _fecCollect.clear();
   for (DID &id:_FECs)
     if (getGate(id >> 1))
@@ -124,37 +131,40 @@ void CirMgr::goFraig(ID id)
     return ;
   }
 
+  gate->setSatVar(_solver.newVar());
+  _solver.addAigCNF(gate->getSatVar(),
+                    getGate(gate->getFanin()[0] >> 1)->getSatVar(),
+                    gate->getFanin()[0] & 1,
+                    getGate(gate->getFanin()[1] >> 1)->getSatVar(),
+                    gate->getFanin()[1] & 1);
   // fraig
   ID g = gate->getFec();
   IdList &v = _fecNow[g];
   for (ID &i: v) {
-    cout << "Proof : " << i << ' ' << id << endl;
+    // cout << "Proof : " << i << ' ' << id << endl;
     // solve by SAT
     CirGate *newGate = getGate(i);
-    Var newV = _solver.newVar();
     bool inv = newGate->getSim() != gate->getSim();
+    Var newV = _solver.newVar();
     _solver.addXorCNF(newV, gate->getSatVar()   , inv  ,
                             newGate->getSatVar(), false);
     _solver.assumeRelease();
-    if (i == 0)
-      _solver.assumeProperty(getGate(0)->getSatVar(), false);
+    _solver.assumeProperty(getGate(0)->getSatVar(), false);
     _solver.assumeProperty(newV, true);
 
     // functionally same -> merge it
     if (!_solver.assumpSolve()) {
       cout << "SAT ";
-      merge(id, (i << 1) | inv);
-      *_hashMap.insert(gateAnd, 0) = (i << 1) | inv;
+      merge(id, (i << 1) | inv, false); // do not delete
+      to = _hashMap.insert(gateAnd, 0);
+      assert(to);
+      *to = (i << 1) | inv;
       return ;
     }
   }
   // no return
   if (g)
     v.push_back(id);
-  _solver.addAigCNF(gate->getSatVar(), getGate(gate->getFanin()[0] >> 1)->getSatVar(),
-                                       gate->getFanin()[0] & 1,
-                                       getGate(gate->getFanin()[1] >> 1)->getSatVar(),
-                                       gate->getFanin()[1] & 1);
 }
 
 /********************************************/

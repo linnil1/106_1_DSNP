@@ -88,7 +88,7 @@ private:
   // gate Operator
   void findFloat() const;
   void takeOutChild(CirGate*);
-  void merge(ID, DID); // real, with-inverse
+  void merge(ID, DID, bool=true); // real, with-inverse
   string mergeStr;
 
   // others

@@ -44,7 +44,7 @@ void CirMgr::randomSim()
         Value(my_random()));
     simulate(64);
   }
-  cout << n << " patterns simulated.\n";
+  cout << '\r' << n << " patterns simulated.\n";
   collectFec();
 }
 
@@ -107,7 +107,7 @@ void CirMgr::fileSim(ifstream& patternFile)
 void CirMgr::simInit()
 {
   // _simStart = 0(uninit), 1(after fraig), 2(ok)
-  if (_simStart == 0) {
+  if (_simStart <= 1) {
     CirGate::setVisitFlag();
     _listAnd = IdList();
     _FECs = DIdList();
@@ -115,8 +115,7 @@ void CirMgr::simInit()
       goFindAnd(i, _listAnd);
   }
   if (_simStart == 1) {
-    CirGate::setVisitFlag();
-    _listAnd = IdList();
+    _FECs.push_back(0);
   }
   _simStart = 2;
 }
