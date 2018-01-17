@@ -42,11 +42,12 @@ void getAll (SatSolver &solver, int* MILOA, Var* &gate, fstream& f)
     f >> MILOA[i];
   // M
   gate = new Var[MILOA[0] + 1];
-  for (int i=0; i<MILOA[0]; ++i)
+  for (int i=0; i<=MILOA[0]; ++i)
     gate[i] = solver.newVar();
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+  assert(argc == 3);
   SatSolver solver;
   solver.initialize();
 
@@ -55,13 +56,13 @@ int main() {
   Var *gate0, *gate1;
 
   // first one
-  fstream f0("w0");
+  fstream f0(argv[1]);
   getAll(solver, MILOA, gate0, f0);
   getIn(ins[0], MILOA[1], outs[0], MILOA[3], f0);
   getAnd(solver, MILOA[4], gate0, f0);
 
   // second one
-  fstream f1("w1");
+  fstream f1(argv[2]);
   getAll(solver, MILOA, gate1, f1);
   // same input
   for (ID& id: ins[0])
