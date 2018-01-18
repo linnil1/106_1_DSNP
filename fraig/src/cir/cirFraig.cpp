@@ -60,7 +60,8 @@ void CirMgr::goStrash(ID id)
 
 void CirMgr::fraig()
 {
-  if (!_groupMax)
+  cout << "Total #FEC Group = " << _groupMax << endl;
+  if (_simStart & SIM_DONE)
     return;
   // init
   CirGate::setVisitFlag();
@@ -78,18 +79,33 @@ void CirMgr::fraig()
   _fecNow[1].push_back(0);
 
   // dfs
-  for (ID &id: _outs)
+  assert(_simStart & Find_AND);
+  for (ID &id: _listAnd)
     goFraig(id);
 
-  // full fraig
-  _groupMax = 0;
-  _hashMap.reset();
-  _fecCollect.clear();
-  for (DID &id:_FECs)
-    if (getGate(id >> 1))
-      getGate(id >> 1)->setFec(0);
-  _FECs.resize(1);
-  _simStart = 1;
+  // reset fec group
+  sweep();
+  unsigned _max = 1;
+  for (unsigned i=1; i<=_groupMax; ++i) {
+    DIdList old;
+    for (DID &did: _fecCollect[i])
+      if (getGate(did >> 1))
+        old.push_back(did);
+    if (old.size() > 1) {
+      for (DID &j: old)
+        getGate(j >> 1)->setFec(_max);
+      _fecCollect[_max++] = old;
+    }
+    else if (old.size() == 1)
+      getGate(old[0] >> 1)->setFec(0);
+  }
+  _groupMax = _max - 1;
+  _fecCollect.resize(_max);
+  if (!_groupMax)
+    _simStart |= SIM_DONE;
+
+  _simStart ^= Find_AND | Find_FECBase; // remove in simInit
+  cout << "Total #FEC Group = " << _groupMax << endl;
 }
 
 // fraig strash opt all in one
@@ -98,11 +114,6 @@ void CirMgr::goFraig(ID id)
 {
   CirGate *gate = getGate(id);
   assert(gate);
-  if (gate->isVisit()) return ;
-  for (unsigned i=0; i<gate->fanInSize(); ++i)
-    goFraig(gate->getFanin()[i] >> 1);
-  if (!gate->isAig())
-    return ;
 
   // opt
   for (unsigned i=0; i<2; ++i)
@@ -139,8 +150,23 @@ void CirMgr::goFraig(ID id)
                     gate->getFanin()[1] & 1);
   // fraig
   ID g = gate->getFec();
+  if (!g)
+    return;
   IdList &v = _fecNow[g];
-  for (ID &i: v) {
+  if (v.size() < 1)
+    return;
+
+  // random 2 index
+  unsigned ind[v.size()];
+  for (unsigned i=0; i<v.size(); ++i)
+    ind[i] = i;
+
+  // solve it with only 2 index
+  for (unsigned k=0; k<2 && k<v.size(); ++k) {
+    unsigned index  = my_random() % (v.size() - k);
+    ID &i = v[ind[index]];
+    ind[index] = ind[v.size() - 1 - k];
+
     // cout << "Proof : " << i << ' ' << id << endl;
     // solve by SAT
     CirGate *newGate = getGate(i);
@@ -161,10 +187,14 @@ void CirMgr::goFraig(ID id)
       *to = (i << 1) | inv;
       return ;
     }
+    else {
+      string s;
+      for (ID &j: _ins)
+        s.push_back(_solver.getValue(getGate(j)->getSatVar()) == 1);
+      _candiIn.push_back(s);
+    }
   }
-  // no return
-  if (g)
-    v.push_back(id);
+  v.push_back(id);
 }
 
 /********************************************/

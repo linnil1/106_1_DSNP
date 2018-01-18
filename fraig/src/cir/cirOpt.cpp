@@ -40,7 +40,6 @@ void CirMgr::sweep()
       cout << "Sweeping: " << gate->getTypeStr()
            << '(' << i << ") removed..." << endl;
       delGate(i);
-      _moreFloat = true;
     }
   }
 }
