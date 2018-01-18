@@ -131,6 +131,7 @@ private:
   SatSolver             _solver;
   vector<IdList>        _fecNow;
   HashMap<GateAnd*,DID> _hashMap;
+  vector<string>        _candiIn;
 };
 
 #endif // CIR_MGR_H

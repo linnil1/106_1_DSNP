@@ -679,6 +679,7 @@ void CirMgr::takeOutChild(CirGate* gate) {
 // Be care for from is gate index , to is 2*ind | inv
 void CirMgr::merge(ID from, DID to, bool del) // del = true
 {
+  _moreFloat = true;
   cout << mergeStr << ": " << (to >> 1) << " merging "
        << ((to & 1) ? "!" : "") << from << "...\n";
   assert(from != (to >> 1)); // merge itself

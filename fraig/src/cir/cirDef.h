@@ -39,4 +39,11 @@ enum GateType
   TOT_GATE
 };
 
+enum SimType
+{
+  Find_AND     = 1,
+  Find_FEC     = 4,
+  Find_FECBase = 2,
+  SIM_DONE     = 8
+};
 #endif // CIR_DEF_H

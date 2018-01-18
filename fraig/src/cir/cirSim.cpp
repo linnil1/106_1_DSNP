@@ -28,21 +28,62 @@ using namespace std;
 /*   Static varaibles and functions   */
 /**************************************/
 
+#define printReturn(sz) {                         \
+  cout << '\r' << sz << " patterns simulated.\n"; \
+  return ;                                        \
+}
+
 /************************************************/
 /*   Public member functions about Simulation   */
 /************************************************/
 void CirMgr::randomSim()
 {
   simInit();
-  int times = _ins.size();
-  int n = times * 64;
-  while (times--) {
+  if (_simStart & SIM_DONE)
+    printReturn(0);
+  unsigned sz = _ins.size();
+  unsigned n = 0;
+
+  // candiate pair from sat
+  Value sim[sz + 1] = {0}; // for zero case
+  for (string &s: _candiIn) {
+    for (unsigned j=0; j<s.size(); ++j)
+      if (s[j])
+        sim[j] |= Value(1) << (n & 63);
+    ++n;
+    if (!(n & 63) || n == _candiIn.size()) {
+      for (unsigned i=0; i<sz; ++i) {
+        static_cast<GateIn*>(getGate(_ins[i]))->setSim(sim[i]);
+        sim[i] = 0;
+      }
+      simulate(n & 63 ? n & 63 : 64);
+      if (_simStart & SIM_DONE) {
+        _candiIn.clear();
+        printReturn(n);
+      }
+    }
+  }
+  _candiIn.clear();
+
+  // random
+  n += sz * 64;
+  while (sz--) {
     for (ID &id: _ins)
       static_cast<GateIn*>(getGate(id))->setSim(
         Value(my_random()) << 62 |
         Value(my_random()) << 31 |
         Value(my_random()));
+    unsigned _max = _groupMax;
     simulate(64);
+    if (_simStart & SIM_DONE)
+      printReturn(n);
+
+    // if no work very well kill it
+    _max = _max < _groupMax ? _groupMax - _max :
+                              _max - _groupMax ;
+    if (_max * 1000 <=  _groupMax) // too small
+      break;
+    _max = _groupMax;
   }
   cout << '\r' << n << " patterns simulated.\n";
   collectFec();
@@ -106,48 +147,66 @@ void CirMgr::fileSim(ifstream& patternFile)
 /*************************************************/
 void CirMgr::simInit()
 {
-  // _simStart = 0(uninit), 1(after fraig), 2(ok)
-  if (_simStart <= 1) {
+  // _simStart -> see cirDef.h
+
+  // find AND list
+  if ((_simStart & Find_AND) == 0) {
     CirGate::setVisitFlag();
     _listAnd = IdList();
-    _FECs = DIdList();
     for (ID &i: _outs)
       goFindAnd(i, _listAnd);
+    _simStart ^= Find_AND;
   }
-  if (_simStart == 1) {
-    _FECs.push_back(0);
+  if ((_simStart & Find_FECBase) == 0) {
+    // init with zero
+    // _FECs = DIdList();
+    // after friag
+    unsigned ri = 0;
+    for (DID &id: _FECs) // this is real gate
+      if (getGate(id >> 1) && getGate(id >> 1)->getFec())
+        _FECs[ri++] = id;
+    if (_FECs.size() && ri == 0)
+      _simStart |= SIM_DONE;
+    _FECs.resize(ri);
+    _simStart ^= Find_FECBase;
   }
-  _simStart = 2;
 }
 
 void CirMgr::simulate(int n)
 {
+  assert(_simStart & Find_AND);
   // simulate
-  for (ID &i: _listAnd)
-    getGate(i)->simulate();
+  for (ID &id: _listAnd)
+    getGate(id)->simulate();
+  for (ID &id: _outs) // this can be skip
+    getGate(id)->simulate();
+
   // write in log if needed
   if (_simLog)
     for (int i=0; i<n; ++i) {
       for (ID &id: _ins)
         *_simLog << ((getGate(id)->getSim() >> i) & 1);
       *_simLog << ' ';
-      for (ID &id: _outs) {
-        // simulate PO
-        getGate(id)->simulate();
+      for (ID &id: _outs)
         *_simLog << ((getGate(id)->getSim() >> i) & 1);
-      }
       *_simLog << '\n';
     }
 
+  // kill
+  if (_simStart & SIM_DONE)
+    return ;
   // init fec if first time use
   // fec will has at least 0 in it
-  if (!_FECs.size()) {
+  assert(_simStart & Find_FECBase);
+  if ((_simStart & Find_FEC) == 0) {
     _FECs = _listAnd;
     _FECs.push_back(0);
     sort(_FECs.begin(), _FECs.end());
     for (DID &i: _FECs) // ID to DID
       i = (i << 1) | (getVal(i << 1) & 1);
+    _simStart ^= Find_FEC;
   }
+  assert(_simStart & Find_FEC);
 
   // regroup fec
   typedef pair<DID, Value> PV; // orignal group, new group
@@ -173,15 +232,15 @@ void CirMgr::simulate(int n)
     getGate(i >> 1)->setFec(g);
   }
   _FECs.resize(ri);
+  if (!ri || !_groupMax)
+    _simStart |= SIM_DONE;
   cout << "\r" << "Total #FEC Group = " << _groupMax;
 }
 
 void CirMgr::collectFec()
 {
-  // simulate PO
-  if (!_simLog)
-    for (ID &id: _outs)
-      getGate(id)->simulate();
+  if (_simStart & SIM_DONE)
+    return ;
   // collect
   _fecCollect = vector<DIdList>(_groupMax + 1);
   for (DID &i: _FECs) {
